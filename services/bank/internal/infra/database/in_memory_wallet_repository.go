@@ -26,8 +26,8 @@ func (r *InMemoryWalletRepository) Save(wallet *models.Wallet) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	if wallet.ID == "" {
-		wallet.ID = uuid.NewString()
+	if wallet.Id == "" {
+		wallet.Id = uuid.NewString()
 	}
 
 	r.Items = append(r.Items, *wallet)

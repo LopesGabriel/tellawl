@@ -8,8 +8,8 @@ import (
 )
 
 type Wallet struct {
-	ID        string
-	CreatorID string
+	Id        string
+	CreatorId string
 	Name      string
 	Balance   Monetary
 	Users     []User
@@ -34,8 +34,8 @@ func (w *Wallet) ClearEvents() {
 
 func CreateNewWallet(name string, creator *User) *Wallet {
 	wallet := &Wallet{
-		ID:        uuid.NewString(),
-		CreatorID: creator.ID,
+		Id:        uuid.NewString(),
+		CreatorId: creator.Id,
 		Name:      name,
 		Balance: Monetary{
 			Value:  0,
@@ -46,8 +46,8 @@ func CreateNewWallet(name string, creator *User) *Wallet {
 	}
 
 	wallet.AddEvent(events.WalletCreatedEvent{
-		WalletID:  wallet.ID,
-		CreatorID: creator.ID,
+		WalletId:  wallet.Id,
+		CreatorId: creator.Id,
 		Name:      name,
 		Timestamp: wallet.CreatedAt,
 	})

@@ -19,7 +19,7 @@ func TestWalletCreation(t *testing.T) {
 
 	userId := uuid.NewString()
 	user := models.User{
-		ID:        userId,
+		Id:        userId,
 		FirstName: "Gabriel",
 		LastName:  "Lopes",
 		Email:     "example@example.com",
@@ -38,5 +38,9 @@ func TestWalletCreation(t *testing.T) {
 
 	if wallet.Name != "My Wallet" {
 		t.Errorf("Expected wallet name to be 'My Wallet', got %v", wallet.Name)
+	}
+
+	if len(walletRepository.Items) < 1 {
+		t.Errorf("Expected at least one wallet, got %v", len(walletRepository.Items))
 	}
 }

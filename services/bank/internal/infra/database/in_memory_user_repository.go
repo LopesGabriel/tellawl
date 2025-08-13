@@ -1,10 +1,14 @@
 package database
 
 import (
-	"errors"
+	"context"
+	"log/slog"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/lopesgabriel/tellawl/services/bank/internal/domain/models"
 	"github.com/lopesgabriel/tellawl/services/bank/internal/domain/ports"
+	"github.com/lopesgabriel/tellawl/services/bank/internal/domain/repository"
 )
 
 type InMemoryUserRepository struct {
@@ -23,15 +27,49 @@ func (r *InMemoryUserRepository) FindByID(id string) (*models.User, error) {
 	var user *models.User
 
 	for _, u := range r.Items {
-		if u.ID == id {
+		if u.Id == id {
 			user = &u
 			break
 		}
 	}
 
 	if user == nil {
-		return nil, errors.New("user not found")
+		return nil, repository.ErrUserNotFound
 	}
 
 	return user, nil
+}
+
+func (r *InMemoryUserRepository) FindByEmail(email string) (*models.User, error) {
+	var user *models.User
+
+	for _, u := range r.Items {
+		if u.Email == email {
+			user = &u
+			break
+		}
+	}
+
+	if user == nil {
+		return nil, repository.ErrUserNotFound
+	}
+
+	return user, nil
+}
+
+func (r *InMemoryUserRepository) Save(user *models.User) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	if user.Id == "" {
+		user.Id = uuid.NewString()
+	}
+
+	r.Items = append(r.Items, *user)
+	if err := r.publisher.Publish(ctx, user.Events()); err != nil {
+		slog.Error("error publishing events", slog.String("error", err.Error()))
+	}
+
+	user.ClearEvents()
+	return nil
 }
