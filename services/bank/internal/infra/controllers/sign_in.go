@@ -27,6 +27,9 @@ type createUserRequest struct {
 }
 
 func (c *signInHttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Server-Version", c.version)
+	w.Header().Add("Content-Type", "application/json")
+
 	useCase := usecases.NewAuthenticateUserUseCase(c.userRepository, jwtSecret)
 
 	var data createUserRequest
@@ -34,7 +37,10 @@ func (c *signInHttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&data)
 	defer r.Body.Close()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		WriteError(w, http.StatusBadRequest, map[string]any{
+			"message": "Could not parse request body, did you provided a valid JSON?",
+			"error":   err.Error(),
+		})
 		return
 	}
 
@@ -44,28 +50,38 @@ func (c *signInHttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		if errors.Is(err, usecases.ErrInvalidCredentials) {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
+			WriteError(w, http.StatusUnauthorized, map[string]any{
+				"message": "Invalid Credentials",
+			})
 			return
 		}
 
 		if errors.Is(err, usecases.ErrInvalidInput) {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			WriteError(w, http.StatusBadRequest, map[string]any{
+				"message": "Invalid Input: email and password are required",
+				"error":   err.Error(),
+			})
 			return
 		}
 
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		if errors.Is(err, repository.ErrUserNotFound) {
+			WriteError(w, http.StatusUnauthorized, map[string]any{
+				"message": "Invalid credentials",
+			})
+			return
+		}
+
+		WriteError(w, http.StatusInternalServerError, map[string]any{
+			"message": "Something unexpected happened",
+			"error":   err.Error(),
+		})
 		return
 	}
 
-	result, err := json.Marshal(map[string]string{
+	result, _ := json.Marshal(map[string]string{
 		"token": token,
 	})
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
 
-	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(result)
 }

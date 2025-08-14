@@ -30,6 +30,8 @@ func NewCreateUserHttpHandler(userRepository repository.UserRepository) *createU
 
 func (c *createUserHttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Server-Version", c.version)
+	w.Header().Add("Content-Type", "application/json")
+
 	useCase := usecases.NewCreateUserUseCase(c.userRepository)
 	signInUseCase := usecases.NewAuthenticateUserUseCase(c.userRepository, jwtSecret)
 
@@ -38,7 +40,10 @@ func (c *createUserHttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 	err := json.NewDecoder(r.Body).Decode(&data)
 	defer r.Body.Close()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		WriteError(w, http.StatusBadRequest, map[string]any{
+			"message": "Could not parse the request body, are you sending a JSON?",
+			"error":   err.Error(),
+		})
 		return
 	}
 
@@ -50,7 +55,10 @@ func (c *createUserHttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 	})
 
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		WriteError(w, http.StatusBadRequest, map[string]any{
+			"message": "Could not sign up",
+			"error":   err.Error(),
+		})
 		return
 	}
 
@@ -61,13 +69,15 @@ func (c *createUserHttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 		Password: data.Password,
 	})
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		WriteError(w, http.StatusInternalServerError, map[string]any{
+			"message": "Could not generate the token",
+			"error":   err.Error(),
+		})
 		return
 	}
 
-	w.Header().Add("Content-Type", "application/json")
 	w.Header().Add("Location", "/users/"+httpUser.Id)
-	w.Header().Add("x-user-token", token)
+	w.Header().Add("token", token)
 	w.WriteHeader(http.StatusCreated)
 	w.Write(httpUser.ToJSON())
 }

@@ -1,6 +1,9 @@
 package controllers
 
-import "net/http"
+import (
+	"encoding/json"
+	"net/http"
+)
 
 type healthHttpHandler struct {
 	version string
@@ -14,6 +17,11 @@ func NewHealthHttpHandler() *healthHttpHandler {
 
 func (c *healthHttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Server-Version", c.version)
+	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("OK"))
+
+	result, _ := json.Marshal(map[string]string{
+		"api": "OK",
+	})
+	w.Write(result)
 }

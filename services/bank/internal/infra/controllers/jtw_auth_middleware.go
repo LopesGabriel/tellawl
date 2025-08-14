@@ -19,14 +19,18 @@ func JWTAuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
-			http.Error(w, "Missing Authorization header", http.StatusUnauthorized)
+			WriteError(w, http.StatusUnauthorized, map[string]any{
+				"message": "Missing Authorization header",
+			})
 			return
 		}
 
 		// Expect header in form: "Bearer <token>"
 		parts := strings.SplitN(authHeader, " ", 2)
 		if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
-			http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
+			WriteError(w, http.StatusUnauthorized, map[string]any{
+				"message": "Invalid Authorization header format",
+			})
 			return
 		}
 
@@ -42,7 +46,9 @@ func JWTAuthMiddleware(next http.Handler) http.Handler {
 		})
 
 		if err != nil || !token.Valid {
-			http.Error(w, "Invalid token", http.StatusUnauthorized)
+			WriteError(w, http.StatusUnauthorized, map[string]any{
+				"message": "Invalid token",
+			})
 			return
 		}
 
@@ -53,6 +59,8 @@ func JWTAuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		http.Error(w, "Invalid token claims", http.StatusUnauthorized)
+		WriteError(w, http.StatusUnauthorized, map[string]any{
+			"message": "Invalid token claims",
+		})
 	})
 }

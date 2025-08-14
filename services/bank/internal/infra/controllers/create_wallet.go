@@ -30,12 +30,17 @@ func NewCreateWalletHttpHandler(userRepository repository.UserRepository, wallet
 
 func (c *createWalletHttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Server-Version", c.version)
+	w.Header().Add("Content-Type", "application/json")
+
 	useCase := usecases.NewCreateWalletUseCase(c.userRepository, c.walletRepository)
 
 	claims := r.Context().Value(userContextKey).(jwt.MapClaims)
 	creatorId, err := claims.GetSubject()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		WriteError(w, http.StatusInternalServerError, map[string]any{
+			"message": "Could not get token subject",
+			"error":   err.Error(),
+		})
 		return
 	}
 
@@ -44,7 +49,10 @@ func (c *createWalletHttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Reque
 	err = json.NewDecoder(r.Body).Decode(&data)
 	defer r.Body.Close()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		WriteError(w, http.StatusBadRequest, map[string]any{
+			"message": "Could not parse the request body, are you sending a JSON?",
+			"error":   err.Error(),
+		})
 		return
 	}
 
@@ -54,13 +62,15 @@ func (c *createWalletHttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Reque
 	})
 
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		WriteError(w, http.StatusBadRequest, map[string]any{
+			"message": "Could not create the wallet",
+			"error":   err.Error(),
+		})
 		return
 	}
 
 	httpWallet := presenter.NewHTTPWallet(*wallet)
 
-	w.Header().Add("Content-Type", "application/json")
 	w.Header().Add("Location", "/wallets/"+wallet.Id)
 	w.WriteHeader(http.StatusCreated)
 	w.Write(httpWallet.ToJSON())
