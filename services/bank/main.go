@@ -24,7 +24,7 @@ func setupHttpServer() *mux.Router {
 	walletRepository := database.NewInMemoryWalletRepository(publisher)
 
 	healthHandler := controllers.NewHealthHttpHandler()
-	createUserHandler := controllers.NewCreateUserHttpHandler(userRepository)
+	signUpHandler := controllers.NewSignUpHttpHandler(userRepository)
 	signInHander := controllers.NewSignInHttpHandler(userRepository)
 	createWalletHandler := controllers.NewCreateWalletHttpHandler(
 		userRepository,
@@ -32,7 +32,7 @@ func setupHttpServer() *mux.Router {
 	)
 
 	router.Handle("/health", healthHandler).Methods("GET")
-	router.Handle("/sign-up", createUserHandler).Methods("POST")
+	router.Handle("/sign-up", signUpHandler).Methods("POST")
 	router.Handle("/sign-in", signInHander).Methods("POST")
 
 	// Authenticated routes

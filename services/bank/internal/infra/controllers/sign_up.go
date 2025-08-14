@@ -9,33 +9,33 @@ import (
 	"github.com/lopesgabriel/tellawl/services/bank/internal/infra/controllers/presenter"
 )
 
-type CreateUserRequest struct {
+type SignUpRequest struct {
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
 	Email     string `json:"email"`
 	Password  string `json:"password"`
 }
 
-type createUserHttpHandler struct {
+type signUpHttpHandler struct {
 	version        string
 	userRepository repository.UserRepository
 }
 
-func NewCreateUserHttpHandler(userRepository repository.UserRepository) *createUserHttpHandler {
-	return &createUserHttpHandler{
+func NewSignUpHttpHandler(userRepository repository.UserRepository) *signUpHttpHandler {
+	return &signUpHttpHandler{
 		version:        "1.0.0",
 		userRepository: userRepository,
 	}
 }
 
-func (c *createUserHttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (c *signUpHttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Server-Version", c.version)
 	w.Header().Add("Content-Type", "application/json")
 
 	useCase := usecases.NewCreateUserUseCase(c.userRepository)
 	signInUseCase := usecases.NewAuthenticateUserUseCase(c.userRepository, jwtSecret)
 
-	var data CreateUserRequest
+	var data SignUpRequest
 	// Read the requst body
 	err := json.NewDecoder(r.Body).Decode(&data)
 	defer r.Body.Close()
