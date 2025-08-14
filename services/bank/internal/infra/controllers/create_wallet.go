@@ -11,7 +11,7 @@ import (
 )
 
 type CreateWalletRequest struct {
-	WalletName string `json:"wallet_name"`
+	WalletName string `json:"name"`
 }
 
 type createWalletHttpHandler struct {

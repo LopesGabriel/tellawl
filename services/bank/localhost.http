@@ -1,0 +1,48 @@
+### Health Check
+GET http://localhost:8080/health
+
+###
+
+### Sign Up - Create new user
+POST http://localhost:8080/sign-up
+Content-Type: application/json
+
+{
+  "first_name": "John",
+  "last_name": "Moe",
+  "email": "john.moe@example.com",
+  "password": "password123"
+}
+
+###
+
+### Sign In - Authenticate user
+POST http://localhost:8080/sign-in
+Content-Type: application/json
+
+{
+  "email": "john.doe@example.com",
+  "password": "password123"
+}
+
+###
+
+### Create Wallet (requires authentication)
+POST http://localhost:8080/wallets
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTUxNDQ1NTAsImlzcyI6ImNvbS50ZWxsYXcuYmFuayIsInN1YiI6IjYzODc4MWI3LTE0NGYtNDczZC04MTg1LWExNmIzODFjZWNjMSJ9.H1FK0QeShfxoD1neaOvAIC_i0XV9fUjS0ejRaDv-fhk
+
+{
+  "name": "My Personal Wallet"
+}
+
+###
+
+### Share Wallet (requires authentication)
+POST http://localhost:8080/wallets/a834ee5f-7281-430e-a8a1-82de16eb8708/share
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTUxNDQ1NTAsImlzcyI6ImNvbS50ZWxsYXcuYmFuayIsInN1YiI6IjYzODc4MWI3LTE0NGYtNDczZC04MTg1LWExNmIzODFjZWNjMSJ9.H1FK0QeShfxoD1neaOvAIC_i0XV9fUjS0ejRaDv-fhk
+
+{
+  "user_email": "john.moe@example.com"
+}

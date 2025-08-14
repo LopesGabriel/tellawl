@@ -1,0 +1,43 @@
+package usecases_test
+
+import (
+	"testing"
+
+	usecases "github.com/lopesgabriel/tellawl/services/bank/internal/application/use-cases"
+	"github.com/lopesgabriel/tellawl/services/bank/internal/domain/models"
+	"github.com/lopesgabriel/tellawl/services/bank/internal/infra/database"
+	"github.com/lopesgabriel/tellawl/services/bank/internal/infra/events"
+)
+
+func TestShareWalletUseCase(t *testing.T) {
+	publisher := events.InMemoryEventPublisher{}
+	userRepository := database.NewInMemoryUserRepository(publisher)
+	walletRepository := database.NewInMemoryWalletRepository(publisher)
+	sut := usecases.NewShareWalletUseCase(userRepository, walletRepository)
+
+	user1, _ := models.CreateNewUser("Gabriel", "Lopes", "gabriel@example.com", "pw1")
+	user2, _ := models.CreateNewUser("Matheus", "Lopes", "matheus@example.com", "pw2")
+	userRepository.Save(user1)
+	userRepository.Save(user2)
+
+	wallet := models.CreateNewWallet("Test wallet", user1)
+	walletRepository.Save(wallet)
+
+	updatedWallet, err := sut.Execute(usecases.ShareWalletUseCaseInput{
+		WalletCreatorId: user1.Id,
+		WalletId:        wallet.Id,
+		SharedUserEmail: user2.Email,
+	})
+
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+
+	if len(updatedWallet.Users) != 2 {
+		t.Errorf("Expected wallet to have 2 users, got %v", len(wallet.Users))
+	}
+
+	if len(walletRepository.Items) != 1 {
+		t.Errorf("Expected one wallet, got %v", len(walletRepository.Items))
+	}
+}

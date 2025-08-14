@@ -30,3 +30,13 @@ type UserCreatedEvent struct {
 func (e UserCreatedEvent) EventType() string     { return "bank.user.created" }
 func (e UserCreatedEvent) AggregateID() string   { return e.UserId }
 func (e UserCreatedEvent) OccurredAt() time.Time { return e.Timestamp }
+
+type UserAddedToWalletEvent struct {
+	WalletId  string
+	UserId    string
+	Timestamp time.Time
+}
+
+func (e UserAddedToWalletEvent) EventType() string     { return "bank.user.added_to_wallet" }
+func (e UserAddedToWalletEvent) AggregateID() string   { return e.WalletId }
+func (e UserAddedToWalletEvent) OccurredAt() time.Time { return e.Timestamp }

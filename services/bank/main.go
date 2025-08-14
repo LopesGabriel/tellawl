@@ -26,6 +26,11 @@ func setupHttpServer() *mux.Router {
 	healthHandler := controllers.NewHealthHttpHandler()
 	signUpHandler := controllers.NewSignUpHttpHandler(userRepository)
 	signInHander := controllers.NewSignInHttpHandler(userRepository)
+	shareWalletHandler := controllers.NewShareWalletHttpHandler(
+		userRepository,
+		walletRepository,
+		"1.0.0",
+	)
 	createWalletHandler := controllers.NewCreateWalletHttpHandler(
 		userRepository,
 		walletRepository,
@@ -37,6 +42,7 @@ func setupHttpServer() *mux.Router {
 
 	// Authenticated routes
 	router.Handle("/wallets", controllers.JWTAuthMiddleware(createWalletHandler))
+	router.Handle("/wallets/{wallet_id}/share", controllers.JWTAuthMiddleware(shareWalletHandler))
 
 	return router
 }

@@ -20,6 +20,18 @@ type Wallet struct {
 	events []events.DomainEvent
 }
 
+func (w *Wallet) AddUser(user *User) {
+	w.Users = append(w.Users, *user)
+	currentTime := time.Now()
+
+	w.AddEvent(events.UserAddedToWalletEvent{
+		WalletId:  w.Id,
+		UserId:    user.Id,
+		Timestamp: currentTime,
+	})
+	w.UpdatedAt = &currentTime
+}
+
 func (w *Wallet) AddEvent(event events.DomainEvent) {
 	w.events = append(w.events, event)
 }
