@@ -21,9 +21,9 @@ type signUpHttpHandler struct {
 	userRepository repository.UserRepository
 }
 
-func NewSignUpHttpHandler(userRepository repository.UserRepository) *signUpHttpHandler {
+func NewSignUpHttpHandler(userRepository repository.UserRepository, version string) *signUpHttpHandler {
 	return &signUpHttpHandler{
-		version:        "1.0.0",
+		version:        version,
 		userRepository: userRepository,
 	}
 }

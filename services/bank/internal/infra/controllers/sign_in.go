@@ -14,10 +14,10 @@ type signInHttpHandler struct {
 	version        string
 }
 
-func NewSignInHttpHandler(userRepository repository.UserRepository) *signInHttpHandler {
+func NewSignInHttpHandler(userRepository repository.UserRepository, version string) *signInHttpHandler {
 	return &signInHttpHandler{
 		userRepository: userRepository,
-		version:        "1.0.0",
+		version:        version,
 	}
 }
 

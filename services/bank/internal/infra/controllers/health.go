@@ -9,9 +9,9 @@ type healthHttpHandler struct {
 	version string
 }
 
-func NewHealthHttpHandler() *healthHttpHandler {
+func NewHealthHttpHandler(version string) *healthHttpHandler {
 	return &healthHttpHandler{
-		version: "1.0.0",
+		version: version,
 	}
 }
 

@@ -34,21 +34,22 @@ func (r *InMemoryWalletRepository) Save(wallet *models.Wallet) error {
 	// Handling update
 	for i, w := range r.Items {
 		if w.Id == wallet.Id {
-			r.Items[i] = *wallet
 			if err := r.publisher.Publish(ctx, wallet.Events()); err != nil {
 				slog.Error("error publishing events", slog.String("error", err.Error()))
 			}
 			wallet.ClearEvents()
+
+			r.Items[i] = *wallet
 			return nil
 		}
 	}
 
-	r.Items = append(r.Items, *wallet)
 	if err := r.publisher.Publish(ctx, wallet.Events()); err != nil {
 		slog.Error("error publishing events", slog.String("error", err.Error()))
 	}
-
 	wallet.ClearEvents()
+
+	r.Items = append(r.Items, *wallet)
 	return nil
 }
 

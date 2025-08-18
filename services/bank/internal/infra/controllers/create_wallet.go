@@ -20,11 +20,11 @@ type createWalletHttpHandler struct {
 	version          string
 }
 
-func NewCreateWalletHttpHandler(userRepository repository.UserRepository, walletRepository repository.WalletRepository) *createWalletHttpHandler {
+func NewCreateWalletHttpHandler(userRepository repository.UserRepository, walletRepository repository.WalletRepository, version string) *createWalletHttpHandler {
 	return &createWalletHttpHandler{
 		userRepository:   userRepository,
 		walletRepository: walletRepository,
-		version:          "1.0.0",
+		version:          version,
 	}
 }
 

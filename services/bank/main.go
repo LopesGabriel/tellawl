@@ -10,6 +10,8 @@ import (
 	"github.com/lopesgabriel/tellawl/services/bank/internal/infra/events"
 )
 
+const VERSION = "1.0.0"
+
 func main() {
 	slog.SetLogLoggerLevel(slog.LevelDebug)
 	router := setupHttpServer()
@@ -23,17 +25,23 @@ func setupHttpServer() *mux.Router {
 	userRepository := database.NewInMemoryUserRepository(publisher)
 	walletRepository := database.NewInMemoryWalletRepository(publisher)
 
-	healthHandler := controllers.NewHealthHttpHandler()
-	signUpHandler := controllers.NewSignUpHttpHandler(userRepository)
-	signInHander := controllers.NewSignInHttpHandler(userRepository)
+	healthHandler := controllers.NewHealthHttpHandler(VERSION)
+	signUpHandler := controllers.NewSignUpHttpHandler(userRepository, VERSION)
+	signInHander := controllers.NewSignInHttpHandler(userRepository, VERSION)
 	shareWalletHandler := controllers.NewShareWalletHttpHandler(
 		userRepository,
 		walletRepository,
-		"1.0.0",
+		VERSION,
 	)
 	createWalletHandler := controllers.NewCreateWalletHttpHandler(
 		userRepository,
 		walletRepository,
+		VERSION,
+	)
+	registerTransactionHandler := controllers.NewRegisterTransactionHttpHandler(
+		userRepository,
+		walletRepository,
+		VERSION,
 	)
 
 	router.Handle("/health", healthHandler).Methods("GET")
@@ -41,8 +49,9 @@ func setupHttpServer() *mux.Router {
 	router.Handle("/sign-in", signInHander).Methods("POST")
 
 	// Authenticated routes
-	router.Handle("/wallets", controllers.JWTAuthMiddleware(createWalletHandler))
-	router.Handle("/wallets/{wallet_id}/share", controllers.JWTAuthMiddleware(shareWalletHandler))
+	router.Handle("/wallets", controllers.JWTAuthMiddleware(createWalletHandler)).Methods("POST")
+	router.Handle("/wallets/{wallet_id}/transactions", controllers.JWTAuthMiddleware(registerTransactionHandler)).Methods("POST")
+	router.Handle("/wallets/{wallet_id}/share", controllers.JWTAuthMiddleware(shareWalletHandler)).Methods("POST")
 
 	return router
 }

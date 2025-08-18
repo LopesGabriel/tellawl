@@ -1,11 +1,20 @@
+@hostname = localhost
+@port = 8080
+@host = {{hostname}}:{{port}}
+@contentType = application/json
+@jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTU1NjU4OTgsImlzcyI6ImNvbS50ZWxsYXcuYmFuayIsInN1YiI6IjBkMjVjZTZlLWFmNzQtNDk1Yy1iZjIxLTE2M2Q5YjkzZGFlMCJ9.jnYIouaXRZGigE81kf5ZQe0exF4m4c_Kim4FCqLcDj8
+@walletId = e3dc0b9e-ca60-42bb-ae1f-0f91c9a0fed1
+
+###
+
 ### Health Check
-GET http://localhost:8080/health
+GET http://{{host}}/health
 
 ###
 
 ### Sign Up - Create new user
-POST http://localhost:8080/sign-up
-Content-Type: application/json
+POST http://{{host}}/sign-up
+Content-Type: {{contentType}}
 
 {
   "first_name": "John",
@@ -17,8 +26,8 @@ Content-Type: application/json
 ###
 
 ### Sign In - Authenticate user
-POST http://localhost:8080/sign-in
-Content-Type: application/json
+POST http://{{host}}/sign-in
+Content-Type: {{contentType}}
 
 {
   "email": "john.doe@example.com",
@@ -28,9 +37,9 @@ Content-Type: application/json
 ###
 
 ### Create Wallet (requires authentication)
-POST http://localhost:8080/wallets
-Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTUxNDQ1NTAsImlzcyI6ImNvbS50ZWxsYXcuYmFuayIsInN1YiI6IjYzODc4MWI3LTE0NGYtNDczZC04MTg1LWExNmIzODFjZWNjMSJ9.H1FK0QeShfxoD1neaOvAIC_i0XV9fUjS0ejRaDv-fhk
+POST http://{{host}}/wallets
+Content-Type: {{contentType}}
+Authorization: Bearer {{jwtToken}}
 
 {
   "name": "My Personal Wallet"
@@ -39,10 +48,22 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTUxNDQ1N
 ###
 
 ### Share Wallet (requires authentication)
-POST http://localhost:8080/wallets/a834ee5f-7281-430e-a8a1-82de16eb8708/share
-Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTUxNDQ1NTAsImlzcyI6ImNvbS50ZWxsYXcuYmFuayIsInN1YiI6IjYzODc4MWI3LTE0NGYtNDczZC04MTg1LWExNmIzODFjZWNjMSJ9.H1FK0QeShfxoD1neaOvAIC_i0XV9fUjS0ejRaDv-fhk
+POST http://{{host}}/wallets/a834ee5f-7281-430e-a8a1-82de16eb8708/share
+Content-Type: {{contentType}}
+Authorization: Bearer {{jwtToken}}
 
 {
   "user_email": "john.moe@example.com"
+}
+
+###
+
+### Register Transaction (requires authentication)
+POST http://{{host}}/wallets/{{walletId}}/transactions
+Content-Type: {{contentType}}
+Authorization: Bearer {{jwtToken}}
+
+{
+  "amount": 15000,
+  "transaction_type": "deposit"
 }

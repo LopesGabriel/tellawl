@@ -65,11 +65,11 @@ func (r *InMemoryUserRepository) Save(user *models.User) error {
 		user.Id = uuid.NewString()
 	}
 
-	r.Items = append(r.Items, *user)
 	if err := r.publisher.Publish(ctx, user.Events()); err != nil {
 		slog.Error("error publishing events", slog.String("error", err.Error()))
 	}
-
 	user.ClearEvents()
+
+	r.Items = append(r.Items, *user)
 	return nil
 }
