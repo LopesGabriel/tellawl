@@ -2,8 +2,8 @@
 @port = 8080
 @host = {{hostname}}:{{port}}
 @contentType = application/json
-@jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTU1NjU4OTgsImlzcyI6ImNvbS50ZWxsYXcuYmFuayIsInN1YiI6IjBkMjVjZTZlLWFmNzQtNDk1Yy1iZjIxLTE2M2Q5YjkzZGFlMCJ9.jnYIouaXRZGigE81kf5ZQe0exF4m4c_Kim4FCqLcDj8
-@walletId = e3dc0b9e-ca60-42bb-ae1f-0f91c9a0fed1
+@jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTU1Njk3NzEsImlzcyI6ImNvbS50ZWxsYXcuYmFuayIsInN1YiI6IjViOTgwNjc3LTU4MjktNDAwYS05Y2ZmLWU5Yjc1ZTg5ZDdmNSJ9.rStz604fSwo1RIT3JcHJEznbe-ppw5MFMQFmVnq82xE
+@walletId = cfed69d1-23a7-421c-a679-f3023df72c48
 
 ###
 
@@ -47,13 +47,20 @@ Authorization: Bearer {{jwtToken}}
 
 ###
 
+### List Wallets (requires authentication)
+GET http://{{host}}/wallets
+Content-Type: {{contentType}}
+Authorization: Bearer {{jwtToken}}
+
+###
+
 ### Share Wallet (requires authentication)
-POST http://{{host}}/wallets/a834ee5f-7281-430e-a8a1-82de16eb8708/share
+POST http://{{host}}/wallets/{{walletId}}/share
 Content-Type: {{contentType}}
 Authorization: Bearer {{jwtToken}}
 
 {
-  "user_email": "john.moe@example.com"
+  "user_email": "john.doe@example.com"
 }
 
 ###
@@ -64,6 +71,6 @@ Content-Type: {{contentType}}
 Authorization: Bearer {{jwtToken}}
 
 {
-  "amount": 15000,
-  "transaction_type": "deposit"
+  "amount": 10000,
+  "transaction_type": "withdraw"
 }

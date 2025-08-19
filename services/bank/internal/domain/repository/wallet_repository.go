@@ -10,5 +10,6 @@ var ErrWalletNotFound = errors.New("wallet not found")
 
 type WalletRepository interface {
 	FindById(id string) (*models.Wallet, error)
+	FindByUserId(userId string) ([]*models.Wallet, error)
 	Save(wallet *models.Wallet) error
 }

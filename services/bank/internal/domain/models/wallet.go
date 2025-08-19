@@ -57,7 +57,11 @@ func (w *Wallet) RegisterNewTransaction(amount Monetary, creator User, transacti
 
 	w.Transactions = append(w.Transactions, *transaction)
 
-	w.Balance = w.Balance.Sum(transaction.Amount)
+	if transaction.Type == TransactionTypeDeposit {
+		w.Balance = w.Balance.Sum(transaction.Amount)
+	} else {
+		w.Balance = w.Balance.Sub(transaction.Amount)
+	}
 
 	w.AddEvent(events.TransactionRegisteredEvent{
 		TransactionId: transaction.Id,
@@ -111,6 +115,10 @@ func CreateNewWallet(name string, creator *User) *Wallet {
 }
 
 func (w *Wallet) IsUserAllowedToRegisterTransactions(userId string) bool {
+	if w.CreatorId == userId {
+		return true
+	}
+
 	for _, user := range w.Users {
 		if user.Id == userId {
 			return true

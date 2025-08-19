@@ -31,13 +31,14 @@ func NewHTTPWallet(wallet models.Wallet) HTTPWallet {
 	}
 
 	httpWallet := HTTPWallet{
-		Id:        wallet.Id,
-		Name:      wallet.Name,
-		CreatorId: wallet.CreatorId,
-		Balance:   NewHTTPMonetary(wallet.Balance),
-		Users:     users,
-		CreatedAt: wallet.CreatedAt,
-		UpdatedAt: wallet.UpdatedAt,
+		Id:           wallet.Id,
+		Name:         wallet.Name,
+		CreatorId:    wallet.CreatorId,
+		Balance:      NewHTTPMonetary(wallet.Balance),
+		Transactions: transactions,
+		Users:        users,
+		CreatedAt:    wallet.CreatedAt,
+		UpdatedAt:    wallet.UpdatedAt,
 	}
 
 	return httpWallet

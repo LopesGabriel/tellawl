@@ -62,3 +62,15 @@ func (r *InMemoryWalletRepository) FindById(id string) (*models.Wallet, error) {
 
 	return nil, repository.ErrWalletNotFound
 }
+
+func (r *InMemoryWalletRepository) FindByUserId(userId string) ([]*models.Wallet, error) {
+	var wallets []*models.Wallet
+
+	for _, wallet := range r.Items {
+		if wallet.IsUserAllowedToRegisterTransactions(userId) {
+			wallets = append(wallets, &wallet)
+		}
+	}
+
+	return wallets, nil
+}
