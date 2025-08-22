@@ -6,13 +6,14 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/mux"
-	usecases "github.com/lopesgabriel/tellawl/services/bank/internal/application/use-cases"
 	"github.com/lopesgabriel/tellawl/services/bank/internal/domain/repository"
 	"github.com/lopesgabriel/tellawl/services/bank/internal/infra/controllers/presenter"
+	usecases "github.com/lopesgabriel/tellawl/services/bank/internal/use-cases"
 )
 
 type RegisterTransactionRequest struct {
 	Amount          int    `json:"amount"`
+	CategoryId      string `json:"category_id"`
 	Offset          int    `json:"offset"`
 	TransactionType string `json:"transaction_type"`
 }
@@ -72,6 +73,7 @@ func (c *registerTransactionHttpHandler) ServeHTTP(w http.ResponseWriter, r *htt
 		TransactionRegisteredByUserId: creatorId,
 		WalletId:                      walletId,
 		Amount:                        data.Amount,
+		CategoryId:                    data.CategoryId,
 		Offset:                        data.Offset,
 		TransactionType:               data.TransactionType,
 	})

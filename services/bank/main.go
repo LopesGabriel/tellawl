@@ -48,6 +48,10 @@ func setupHttpServer() *mux.Router {
 		walletRepository,
 		VERSION,
 	)
+	createCategoryHandler := controllers.NewCreateCategoryHttpHandler(
+		walletRepository,
+		VERSION,
+	)
 
 	router.Handle("/health", healthHandler).Methods("GET")
 	router.Handle("/sign-up", signUpHandler).Methods("POST")
@@ -56,8 +60,13 @@ func setupHttpServer() *mux.Router {
 	// Authenticated routes
 	router.Handle("/wallets", controllers.JWTAuthMiddleware(createWalletHandler)).Methods("POST")
 	router.Handle("/wallets", controllers.JWTAuthMiddleware(listUserWallets)).Methods("GET")
-	router.Handle("/wallets/{wallet_id}/transactions", controllers.JWTAuthMiddleware(registerTransactionHandler)).Methods("POST")
 	router.Handle("/wallets/{wallet_id}/share", controllers.JWTAuthMiddleware(shareWalletHandler)).Methods("POST")
+
+	// Transactions
+	router.Handle("/wallets/{wallet_id}/transactions", controllers.JWTAuthMiddleware(registerTransactionHandler)).Methods("POST")
+
+	// Categories
+	router.Handle("/wallets/{wallet_id}/categories", controllers.JWTAuthMiddleware(createCategoryHandler)).Methods("POST")
 
 	return router
 }

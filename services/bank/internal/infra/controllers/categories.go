@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/mux"
@@ -12,29 +13,27 @@ import (
 	usecases "github.com/lopesgabriel/tellawl/services/bank/internal/use-cases"
 )
 
-type ShareWalletRequest struct {
-	UserEmail string `json:"user_email"`
+type CreateCategoryRequest struct {
+	CategoryName string `json:"name"`
 }
 
-type shareWalletHttpHandler struct {
-	userRepository   repository.UserRepository
+type createCategoryHttpHandler struct {
 	walletRepository repository.WalletRepository
 	version          string
 }
 
-func NewShareWalletHttpHandler(userRepository repository.UserRepository, walletRepository repository.WalletRepository, version string) *shareWalletHttpHandler {
-	return &shareWalletHttpHandler{
-		userRepository:   userRepository,
+func NewCreateCategoryHttpHandler(walletRepository repository.WalletRepository, version string) *createCategoryHttpHandler {
+	return &createCategoryHttpHandler{
 		walletRepository: walletRepository,
 		version:          version,
 	}
 }
 
-func (c *shareWalletHttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (c *createCategoryHttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Server-Version", c.version)
 	w.Header().Add("Content-Type", "application/json")
 
-	useCase := usecases.NewShareWalletUseCase(c.userRepository, c.walletRepository)
+	useCase := usecases.NewCreateCategoryUseCase(c.walletRepository)
 
 	claims := r.Context().Value(userContextKey).(jwt.MapClaims)
 	creatorId, err := claims.GetSubject()
@@ -46,7 +45,7 @@ func (c *shareWalletHttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	var data ShareWalletRequest
+	var data CreateCategoryRequest
 	// Read the requst body
 	err = json.NewDecoder(r.Body).Decode(&data)
 	defer r.Body.Close()
@@ -67,36 +66,53 @@ func (c *shareWalletHttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	wallet, err := useCase.Execute(usecases.ShareWalletUseCaseInput{
-		WalletCreatorId: creatorId,
-		WalletId:        walletId,
-		SharedUserEmail: data.UserEmail,
-	})
-
+	wallet, err := c.walletRepository.FindById(walletId)
 	if err != nil {
-		if errors.Is(err, usecases.ErrInsufficientPermissions) {
-			WriteError(w, http.StatusForbidden, map[string]any{
-				"message": "You do not have permission to share this wallet",
-			})
-			return
-		}
-
 		if errors.Is(err, repository.ErrWalletNotFound) {
 			WriteError(w, http.StatusNotFound, map[string]any{
 				"message": "Wallet not found",
+				"error":   err.Error(),
 			})
 			return
 		}
 
 		WriteError(w, http.StatusInternalServerError, map[string]any{
-			"message": "Could not share the wallet",
+			"message": "Could not find wallet",
 			"error":   err.Error(),
 		})
 		return
 	}
 
-	httpWallet := presenter.NewHTTPWallet(*wallet)
+	if !wallet.IsUserAllowedToRegisterTransactions(creatorId) {
+		WriteError(w, http.StatusForbidden, map[string]any{
+			"message": "You are not allowed to create categories in this wallet",
+		})
+		return
+	}
 
-	w.WriteHeader(http.StatusOK)
-	w.Write(httpWallet.ToJSON())
+	category, err := useCase.Execute(usecases.CreateCategoryUseCaseInput{
+		Name:     data.CategoryName,
+		WalletId: walletId,
+	})
+	if err != nil {
+		if strings.Contains(err.Error(), "wallet not found") {
+			WriteError(w, http.StatusNotFound, map[string]any{
+				"message": "Wallet not found",
+				"error":   err.Error(),
+			})
+			return
+		}
+
+		WriteError(w, http.StatusInternalServerError, map[string]any{
+			"message": "Could not create the wallet",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	httpCategory := presenter.NewHTTPCategory(*category)
+
+	w.Header().Add("Location", "/wallets/"+walletId+"/category/"+category.Id)
+	w.WriteHeader(http.StatusCreated)
+	w.Write(httpCategory.ToJSON())
 }

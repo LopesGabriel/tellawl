@@ -14,6 +14,7 @@ type RegisterTransactionUseCaseInput struct {
 	TransactionRegisteredByUserId string
 	WalletId                      string
 	Amount                        int
+	CategoryId                    string
 	Offset                        int
 	TransactionType               string
 }
@@ -48,6 +49,7 @@ func (usecase *registerTransactionUseCase) Execute(input RegisterTransactionUseC
 		models.Monetary{Value: input.Amount, Offset: input.Offset},
 		*user,
 		models.TransactionType(input.TransactionType),
+		input.CategoryId,
 	)
 	if err != nil {
 		if err.Error() == "user is not allowed to register transactions" {

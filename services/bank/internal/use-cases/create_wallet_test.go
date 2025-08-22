@@ -5,10 +5,10 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	usecases "github.com/lopesgabriel/tellawl/services/bank/internal/application/use-cases"
 	"github.com/lopesgabriel/tellawl/services/bank/internal/domain/models"
 	"github.com/lopesgabriel/tellawl/services/bank/internal/infra/database"
 	"github.com/lopesgabriel/tellawl/services/bank/internal/infra/events"
+	usecases "github.com/lopesgabriel/tellawl/services/bank/internal/use-cases"
 )
 
 func TestWalletCreation(t *testing.T) {

@@ -48,6 +48,7 @@ type TransactionRegisteredEvent struct {
 	WalletId      string
 	UserId        string
 	Amount        map[string]int
+	CategoryId    string
 	Type          string
 	Timestamp     time.Time
 }

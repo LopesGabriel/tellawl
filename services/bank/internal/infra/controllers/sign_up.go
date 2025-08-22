@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	usecases "github.com/lopesgabriel/tellawl/services/bank/internal/application/use-cases"
 	"github.com/lopesgabriel/tellawl/services/bank/internal/domain/repository"
 	"github.com/lopesgabriel/tellawl/services/bank/internal/infra/controllers/presenter"
+	usecases "github.com/lopesgabriel/tellawl/services/bank/internal/use-cases"
 )
 
 type SignUpRequest struct {

@@ -3,9 +3,9 @@ package usecases_test
 import (
 	"testing"
 
-	usecases "github.com/lopesgabriel/tellawl/services/bank/internal/application/use-cases"
 	"github.com/lopesgabriel/tellawl/services/bank/internal/infra/database"
 	"github.com/lopesgabriel/tellawl/services/bank/internal/infra/events"
+	usecases "github.com/lopesgabriel/tellawl/services/bank/internal/use-cases"
 )
 
 func TestUserCreation(t *testing.T) {

@@ -5,8 +5,8 @@ import (
 	"errors"
 	"net/http"
 
-	usecases "github.com/lopesgabriel/tellawl/services/bank/internal/application/use-cases"
 	"github.com/lopesgabriel/tellawl/services/bank/internal/domain/repository"
+	usecases "github.com/lopesgabriel/tellawl/services/bank/internal/use-cases"
 )
 
 type signInHttpHandler struct {

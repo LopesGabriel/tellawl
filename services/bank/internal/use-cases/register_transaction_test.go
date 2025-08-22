@@ -29,19 +29,27 @@ func TestRegisterTransactionUseCase(t *testing.T) {
 		wallet := models.CreateNewWallet("Test wallet", user)
 		walletRepository.Save(wallet)
 
+		var categoryId string
+		for _, category := range wallet.Categories {
+			if category.Name == "Salário" {
+				categoryId = category.Id
+			}
+		}
+
 		transaction, err := sut.Execute(RegisterTransactionUseCaseInput{
 			TransactionRegisteredByUserId: user.Id,
 			WalletId:                      wallet.Id,
-			Amount:                        10000,
+			Amount:                        1000000,
 			TransactionType:               "deposit",
+			CategoryId:                    categoryId,
 		})
 
 		if err != nil {
 			t.Errorf("Expected no error, got %v", err)
 		}
 
-		if transaction.Amount.Value != 10000 {
-			t.Errorf("Expected transaction amount to be 10000, got %v", transaction.Amount.Value)
+		if transaction.Amount.Value != 1000000 {
+			t.Errorf("Expected transaction amount to be 1000000, got %v", transaction.Amount.Value)
 		}
 		if transaction.Amount.Offset != 100 {
 			t.Errorf("Expected transaction offset to be 100, got %v", transaction.Amount.Offset)
@@ -52,8 +60,8 @@ func TestRegisterTransactionUseCase(t *testing.T) {
 			t.Errorf("Expected no error, got %v", err)
 		}
 
-		if wallet.Balance.Value != 10000 {
-			t.Errorf("Expected wallet balance to be 10000, got %v", wallet.Balance.Value)
+		if wallet.Balance.Value != 1000000 {
+			t.Errorf("Expected wallet balance to be 1000000, got %v", wallet.Balance.Value)
 		}
 
 		if len(wallet.Transactions) != 1 {
@@ -76,20 +84,28 @@ func TestRegisterTransactionUseCase(t *testing.T) {
 		wallet := models.CreateNewWallet("Test wallet", user)
 		walletRepository.Save(wallet)
 
+		var categoryId string
+		for _, category := range wallet.Categories {
+			if category.Name == "Salário" {
+				categoryId = category.Id
+			}
+		}
+
 		transaction, err := sut.Execute(RegisterTransactionUseCaseInput{
 			TransactionRegisteredByUserId: user.Id,
 			WalletId:                      wallet.Id,
-			Amount:                        10000,
+			Amount:                        3000000,
 			Offset:                        1000,
 			TransactionType:               "deposit",
+			CategoryId:                    categoryId,
 		})
 
 		if err != nil {
 			t.Errorf("Expected no error, got %v", err)
 		}
 
-		if transaction.Amount.Value != 10000 {
-			t.Errorf("Expected transaction amount to be 10000, got %v", transaction.Amount.Value)
+		if transaction.Amount.Value != 3000000 {
+			t.Errorf("Expected transaction amount to be 3000000, got %v", transaction.Amount.Value)
 		}
 		if transaction.Amount.Offset != 1000 {
 			t.Errorf("Expected transaction offset to be 1000, got %v", transaction.Amount.Offset)
@@ -100,8 +116,8 @@ func TestRegisterTransactionUseCase(t *testing.T) {
 			t.Errorf("Expected no error, got %v", err)
 		}
 
-		if wallet.Balance.Value != 1000 {
-			t.Errorf("Expected wallet balance to be 1000, got %v", wallet.Balance.Value)
+		if wallet.Balance.Value != 300000 {
+			t.Errorf("Expected wallet balance to be 300000, got %v", wallet.Balance.Value)
 		}
 
 		if len(wallet.Transactions) != 1 {
@@ -126,12 +142,20 @@ func TestRegisterTransactionUseCase(t *testing.T) {
 		wallet := models.CreateNewWallet("Test wallet", user)
 		walletRepository.Save(wallet)
 
+		var categoryId string
+		for _, category := range wallet.Categories {
+			if category.Name == "Salário" {
+				categoryId = category.Id
+			}
+		}
+
 		_, err := sut.Execute(RegisterTransactionUseCaseInput{
 			TransactionRegisteredByUserId: user2.Id,
 			WalletId:                      wallet.Id,
 			Amount:                        10000,
 			Offset:                        1000,
 			TransactionType:               "deposit",
+			CategoryId:                    categoryId,
 		})
 
 		if err != ErrInsufficientPermissions {
@@ -171,11 +195,19 @@ func TestRegisterTransactionUseCase(t *testing.T) {
 		wallet.AddUser(user2)
 		walletRepository.Save(wallet)
 
+		var categoryId string
+		for _, category := range wallet.Categories {
+			if category.Name == "Salário" {
+				categoryId = category.Id
+			}
+		}
+
 		_, err := sut.Execute(RegisterTransactionUseCaseInput{
 			TransactionRegisteredByUserId: user2.Id,
 			WalletId:                      wallet.Id,
-			Amount:                        10000,
+			Amount:                        350000,
 			TransactionType:               "deposit",
+			CategoryId:                    categoryId,
 		})
 
 		if err != nil {
@@ -187,8 +219,8 @@ func TestRegisterTransactionUseCase(t *testing.T) {
 			t.Errorf("Expected no error, got %v", err)
 		}
 
-		if wallet.Balance.Value != 10000 {
-			t.Errorf("Expected wallet balance to be 10000, got %v", wallet.Balance.Value)
+		if wallet.Balance.Value != 350000 {
+			t.Errorf("Expected wallet balance to be 350000, got %v", wallet.Balance.Value)
 		}
 
 		if len(wallet.Transactions) != 1 {

@@ -16,6 +16,7 @@ type Wallet struct {
 
 	Users        []User
 	Transactions []Transaction
+	Categories   []Category
 
 	CreatedAt time.Time
 	UpdatedAt *time.Time
@@ -35,7 +36,7 @@ func (w *Wallet) AddUser(user *User) {
 	w.UpdatedAt = &currentTime
 }
 
-func (w *Wallet) RegisterNewTransaction(amount Monetary, creator User, transactionType TransactionType) (*Transaction, error) {
+func (w *Wallet) RegisterNewTransaction(amount Monetary, creator User, transactionType TransactionType, categoryId string) (*Transaction, error) {
 	id := uuid.NewString()
 	currentTime := time.Now()
 
@@ -47,9 +48,22 @@ func (w *Wallet) RegisterNewTransaction(amount Monetary, creator User, transacti
 		return nil, errors.New("user is not allowed to register transactions")
 	}
 
+	var category Category
+	for _, c := range w.Categories {
+		if c.Id == categoryId {
+			category = c
+			break
+		}
+	}
+
+	if category.Id == "" {
+		return nil, errors.New("category not found")
+	}
+
 	transaction := &Transaction{
 		Id:        id,
 		Amount:    amount,
+		Category:  category,
 		CreatedBy: creator,
 		Type:      transactionType,
 		CreatedAt: currentTime,
@@ -71,8 +85,9 @@ func (w *Wallet) RegisterNewTransaction(amount Monetary, creator User, transacti
 			"value":  transaction.Amount.Value,
 			"offset": transaction.Amount.Offset,
 		},
-		Type:      string(transaction.Type),
-		Timestamp: currentTime,
+		CategoryId: category.Id,
+		Type:       string(transaction.Type),
+		Timestamp:  currentTime,
 	})
 
 	return transaction, nil
@@ -91,8 +106,9 @@ func (w *Wallet) ClearEvents() {
 }
 
 func CreateNewWallet(name string, creator *User) *Wallet {
+	walletId := uuid.NewString()
 	wallet := &Wallet{
-		Id:        uuid.NewString(),
+		Id:        walletId,
 		CreatorId: creator.Id,
 		Name:      name,
 		Balance: Monetary{
@@ -101,6 +117,7 @@ func CreateNewWallet(name string, creator *User) *Wallet {
 		},
 		Users:        []User{*creator},
 		Transactions: []Transaction{},
+		Categories:   createDefaultCategories(walletId),
 		CreatedAt:    time.Now(),
 	}
 
@@ -112,6 +129,60 @@ func CreateNewWallet(name string, creator *User) *Wallet {
 	})
 
 	return wallet
+}
+
+func (w *Wallet) AddCustomCategory(name string) (*Category, error) {
+	if name == "" {
+		return nil, errors.New("category name cannot be empty")
+	}
+
+	category := CreateCustomCategory(w.Id, name)
+	w.Categories = append(w.Categories, *category)
+	currentTime := time.Now()
+	w.UpdatedAt = &currentTime
+
+	return category, nil
+}
+
+func (w *Wallet) UpdateCategory(categoryId, name string) (*Category, error) {
+	if name == "" {
+		return nil, errors.New("category name cannot be empty")
+	}
+
+	for i, category := range w.Categories {
+		if category.Id == categoryId {
+			if category.Type == CategoryTypeDefault {
+				return nil, errors.New("cannot update default categories")
+			}
+			w.Categories[i].Name = name
+			currentTime := time.Now()
+			w.Categories[i].UpdatedAt = &currentTime
+			w.UpdatedAt = &currentTime
+			return &w.Categories[i], nil
+		}
+	}
+
+	return nil, errors.New("category not found")
+}
+
+func (w *Wallet) DeleteCategory(categoryId string) error {
+	for i, category := range w.Categories {
+		if category.Id == categoryId {
+			if category.Type == CategoryTypeDefault {
+				return errors.New("cannot delete default categories")
+			}
+			w.Categories = append(w.Categories[:i], w.Categories[i+1:]...)
+			currentTime := time.Now()
+			w.UpdatedAt = &currentTime
+			return nil
+		}
+	}
+
+	return errors.New("category not found")
+}
+
+func (w *Wallet) GetCategories() []Category {
+	return w.Categories
 }
 
 func (w *Wallet) IsUserAllowedToRegisterTransactions(userId string) bool {
@@ -126,4 +197,15 @@ func (w *Wallet) IsUserAllowedToRegisterTransactions(userId string) bool {
 	}
 
 	return false
+}
+
+func createDefaultCategories(walletId string) []Category {
+	defaultNames := GetDefaultCategories()
+	categories := make([]Category, len(defaultNames))
+
+	for i, name := range defaultNames {
+		categories[i] = *CreateDefaultCategory(walletId, name)
+	}
+
+	return categories
 }

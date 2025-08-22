@@ -14,6 +14,7 @@ type HTTPWallet struct {
 	Balance      HTTPMonetary      `json:"balance"`
 	Transactions []HTTPTransaction `json:"transactions"`
 	Users        []HTTPUser        `json:"users"`
+	Categories   []HTTPCategory    `json:"categories"`
 	CreatedAt    time.Time         `json:"created_at"`
 	UpdatedAt    *time.Time        `json:"updated_at"`
 }
@@ -21,6 +22,7 @@ type HTTPWallet struct {
 func NewHTTPWallet(wallet models.Wallet) HTTPWallet {
 	users := make([]HTTPUser, len(wallet.Users))
 	transactions := make([]HTTPTransaction, len(wallet.Transactions))
+	categories := make([]HTTPCategory, len(wallet.Categories))
 
 	for i, user := range wallet.Users {
 		users[i] = NewHTTPUser(user)
@@ -30,12 +32,17 @@ func NewHTTPWallet(wallet models.Wallet) HTTPWallet {
 		transactions[i] = NewHTTPTransaction(transaction)
 	}
 
+	for i, category := range wallet.Categories {
+		categories[i] = NewHTTPCategory(category)
+	}
+
 	httpWallet := HTTPWallet{
 		Id:           wallet.Id,
 		Name:         wallet.Name,
 		CreatorId:    wallet.CreatorId,
 		Balance:      NewHTTPMonetary(wallet.Balance),
 		Transactions: transactions,
+		Categories:   categories,
 		Users:        users,
 		CreatedAt:    wallet.CreatedAt,
 		UpdatedAt:    wallet.UpdatedAt,

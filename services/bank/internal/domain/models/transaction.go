@@ -15,6 +15,7 @@ type Transaction struct {
 	Id string
 
 	Amount    Monetary
+	Category  Category
 	CreatedBy User
 	Type      TransactionType
 
