@@ -2,8 +2,8 @@
 @port = 8080
 @host = {{hostname}}:{{port}}
 @contentType = application/json
-@jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTU1Njk3NzEsImlzcyI6ImNvbS50ZWxsYXcuYmFuayIsInN1YiI6IjViOTgwNjc3LTU4MjktNDAwYS05Y2ZmLWU5Yjc1ZTg5ZDdmNSJ9.rStz604fSwo1RIT3JcHJEznbe-ppw5MFMQFmVnq82xE
-@walletId = cfed69d1-23a7-421c-a679-f3023df72c48
+@jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTU5MjUzMjgsImlzcyI6ImNvbS50ZWxsYXcuYmFuayIsInN1YiI6IjgzNTZmZmZhLTc2Y2QtNGU1My1iNzMzLTc0YTE5M2I5MWRjOCJ9.M9wEHkqK9qbKJH7j4y3T-4S9W4uA-CTMkc0F53je6qA
+@walletId = 28b68ddd-8daa-4585-9e0d-d535b3f379ed
 
 ###
 
@@ -74,3 +74,10 @@ Authorization: Bearer {{jwtToken}}
   "amount": 10000,
   "transaction_type": "withdraw"
 }
+
+###
+
+### List Categories (requires categories)
+GET http://{{host}}/wallets/{{walletId}}/categories
+Content-Type: {{contentType}}
+Authorization: Bearer {{jwtToken}}
