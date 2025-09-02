@@ -36,7 +36,7 @@ func (w *Wallet) AddUser(user *User) {
 	w.UpdatedAt = &currentTime
 }
 
-func (w *Wallet) RegisterNewTransaction(amount Monetary, creator User, transactionType TransactionType, categoryId string) (*Transaction, error) {
+func (w *Wallet) RegisterNewTransaction(amount Monetary, creator User, transactionType TransactionType, categoryId string, description string) (*Transaction, error) {
 	id := uuid.NewString()
 	currentTime := time.Now()
 
@@ -61,12 +61,13 @@ func (w *Wallet) RegisterNewTransaction(amount Monetary, creator User, transacti
 	}
 
 	transaction := &Transaction{
-		Id:        id,
-		Amount:    amount,
-		Category:  category,
-		CreatedBy: creator,
-		Type:      transactionType,
-		CreatedAt: currentTime,
+		Id:          id,
+		Amount:      amount,
+		Category:    category,
+		CreatedBy:   creator,
+		Type:        transactionType,
+		Description: description,
+		CreatedAt:   currentTime,
 	}
 
 	w.Transactions = append(w.Transactions, *transaction)
@@ -85,9 +86,10 @@ func (w *Wallet) RegisterNewTransaction(amount Monetary, creator User, transacti
 			"value":  transaction.Amount.Value,
 			"offset": transaction.Amount.Offset,
 		},
-		CategoryId: category.Id,
-		Type:       string(transaction.Type),
-		Timestamp:  currentTime,
+		CategoryId:  category.Id,
+		Type:        string(transaction.Type),
+		Timestamp:   currentTime,
+		Description: description,
 	})
 
 	return transaction, nil

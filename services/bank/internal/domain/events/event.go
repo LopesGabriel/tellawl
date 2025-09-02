@@ -47,6 +47,7 @@ type TransactionRegisteredEvent struct {
 	TransactionId string
 	WalletId      string
 	UserId        string
+	Description   string
 	Amount        map[string]int
 	CategoryId    string
 	Type          string

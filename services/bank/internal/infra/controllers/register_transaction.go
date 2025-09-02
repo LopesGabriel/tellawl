@@ -16,6 +16,7 @@ type RegisterTransactionRequest struct {
 	CategoryId      string `json:"category_id"`
 	Offset          int    `json:"offset"`
 	TransactionType string `json:"transaction_type"`
+	Description     string `json:"description"`
 }
 
 type registerTransactionHttpHandler struct {
@@ -76,6 +77,7 @@ func (c *registerTransactionHttpHandler) ServeHTTP(w http.ResponseWriter, r *htt
 		CategoryId:                    data.CategoryId,
 		Offset:                        data.Offset,
 		TransactionType:               data.TransactionType,
+		Description:                   data.Description,
 	})
 
 	if err != nil {

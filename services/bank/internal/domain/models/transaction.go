@@ -14,10 +14,11 @@ const (
 type Transaction struct {
 	Id string
 
-	Amount    Monetary
-	Category  Category
-	CreatedBy User
-	Type      TransactionType
+	Amount      Monetary
+	Category    Category
+	CreatedBy   User
+	Type        TransactionType
+	Description string
 
 	CreatedAt time.Time
 	UpdatedAt *time.Time

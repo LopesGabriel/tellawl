@@ -17,6 +17,7 @@ type RegisterTransactionUseCaseInput struct {
 	CategoryId                    string
 	Offset                        int
 	TransactionType               string
+	Description                   string
 }
 
 func NewRegisterTransactionUseCase(userRepository repository.UserRepository, walletRepository repository.WalletRepository) *registerTransactionUseCase {
@@ -50,6 +51,7 @@ func (usecase *registerTransactionUseCase) Execute(input RegisterTransactionUseC
 		*user,
 		models.TransactionType(input.TransactionType),
 		input.CategoryId,
+		input.Description,
 	)
 	if err != nil {
 		if err.Error() == "user is not allowed to register transactions" {

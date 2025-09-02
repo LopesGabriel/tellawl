@@ -12,6 +12,7 @@ type HTTPTransaction struct {
 	Amount          HTTPMonetary `json:"amount"`
 	CreatedBy       HTTPUser     `json:"created_by"`
 	TransactionType string       `json:"transaction_type"`
+	Description     string       `json:"description"`
 	CreatedAt       time.Time    `json:"created_at"`
 	UpdatedAt       *time.Time   `json:"updated_at"`
 }
@@ -22,6 +23,7 @@ func NewHTTPTransaction(transaction models.Transaction) HTTPTransaction {
 		Amount:          NewHTTPMonetary(transaction.Amount),
 		CreatedBy:       NewHTTPUser(transaction.CreatedBy),
 		TransactionType: string(transaction.Type),
+		Description:     transaction.Description,
 		CreatedAt:       transaction.CreatedAt,
 		UpdatedAt:       transaction.UpdatedAt,
 	}

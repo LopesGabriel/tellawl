@@ -42,6 +42,7 @@ func TestRegisterTransactionUseCase(t *testing.T) {
 			Amount:                        1000000,
 			TransactionType:               "deposit",
 			CategoryId:                    categoryId,
+			Description:                   "Test salary deposit",
 		})
 
 		if err != nil {
@@ -98,6 +99,7 @@ func TestRegisterTransactionUseCase(t *testing.T) {
 			Offset:                        1000,
 			TransactionType:               "deposit",
 			CategoryId:                    categoryId,
+			Description:                   "Custom offset deposit",
 		})
 
 		if err != nil {
@@ -156,6 +158,7 @@ func TestRegisterTransactionUseCase(t *testing.T) {
 			Offset:                        1000,
 			TransactionType:               "deposit",
 			CategoryId:                    categoryId,
+			Description:                   "Unauthorized attempt",
 		})
 
 		if err != ErrInsufficientPermissions {
@@ -208,6 +211,7 @@ func TestRegisterTransactionUseCase(t *testing.T) {
 			Amount:                        350000,
 			TransactionType:               "deposit",
 			CategoryId:                    categoryId,
+			Description:                   "Authorized user deposit",
 		})
 
 		if err != nil {

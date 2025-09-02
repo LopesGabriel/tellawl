@@ -2,9 +2,9 @@
 @port = 8080
 @host = {{hostname}}:{{port}}
 @contentType = application/json
-@jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTY3ODQ0MDEsImlzcyI6ImNvbS50ZWxsYXcuYmFuayIsInN1YiI6ImNkZDZmMTg0LTdmYWItNGYyNC04ZjBjLTIzZTU3NjRmNWIwZiJ9.fB4EDKSMAfhtDikcwWrtxQhKKINjAfOCUgsTUJV_zZ8
-@walletId = 6b933fe3-837f-4cf3-815c-2e2b173ef3ae
-@categoryId = 7fac4f44-ae4a-4eb3-81df-8f6d6b25fdbd
+@jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTY3ODUzNjcsImlzcyI6ImNvbS50ZWxsYXcuYmFuayIsInN1YiI6ImExYTBiMjllLTRkZjMtNGU3OC1iYjY3LWQ2OTdhOTM3NzU4MSJ9.FhYl__hTD3DBuaOkuvRQh3R65mBQlF7ewGvtD-xLVnU
+@walletId = a33ce379-b8e7-4d5c-9c59-b65d567c48e1
+@categoryId = e7d7b2bd-585d-48f3-a48c-f66e54ff9ed8
 
 ###
 
@@ -72,9 +72,10 @@ Content-Type: {{contentType}}
 Authorization: Bearer {{jwtToken}}
 
 {
-  "amount": 50000,
+  "amount": 546600,
   "transaction_type": "deposit",
-  "category_id": "{{categoryId}}"
+  "category_id": "{{categoryId}}",
+  "description": "Monthly salary deposit"
 }
 
 ###
