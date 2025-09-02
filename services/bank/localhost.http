@@ -2,8 +2,9 @@
 @port = 8080
 @host = {{hostname}}:{{port}}
 @contentType = application/json
-@jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTU5MjUzMjgsImlzcyI6ImNvbS50ZWxsYXcuYmFuayIsInN1YiI6IjgzNTZmZmZhLTc2Y2QtNGU1My1iNzMzLTc0YTE5M2I5MWRjOCJ9.M9wEHkqK9qbKJH7j4y3T-4S9W4uA-CTMkc0F53je6qA
-@walletId = 28b68ddd-8daa-4585-9e0d-d535b3f379ed
+@jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTY3ODQ0MDEsImlzcyI6ImNvbS50ZWxsYXcuYmFuayIsInN1YiI6ImNkZDZmMTg0LTdmYWItNGYyNC04ZjBjLTIzZTU3NjRmNWIwZiJ9.fB4EDKSMAfhtDikcwWrtxQhKKINjAfOCUgsTUJV_zZ8
+@walletId = 6b933fe3-837f-4cf3-815c-2e2b173ef3ae
+@categoryId = 7fac4f44-ae4a-4eb3-81df-8f6d6b25fdbd
 
 ###
 
@@ -18,8 +19,8 @@ Content-Type: {{contentType}}
 
 {
   "first_name": "John",
-  "last_name": "Moe",
-  "email": "john.moe@example.com",
+  "last_name": "Doe",
+  "email": "john.doe@example.com",
   "password": "password123"
 }
 
@@ -71,13 +72,50 @@ Content-Type: {{contentType}}
 Authorization: Bearer {{jwtToken}}
 
 {
-  "amount": 10000,
-  "transaction_type": "withdraw"
+  "amount": 50000,
+  "transaction_type": "deposit",
+  "category_id": "{{categoryId}}"
 }
 
 ###
 
-### List Categories (requires categories)
+### Create Category (requires authentication)
+POST http://{{host}}/wallets/{{walletId}}/categories
+Content-Type: {{contentType}}
+Authorization: Bearer {{jwtToken}}
+
+{
+  "name": "Food & Dining"
+}
+
+###
+
+### List Categories (requires authentication)
 GET http://{{host}}/wallets/{{walletId}}/categories
+Content-Type: {{contentType}}
+Authorization: Bearer {{jwtToken}}
+
+###
+
+### Get Category (requires authentication)
+GET http://{{host}}/wallets/{{walletId}}/categories/{{categoryId}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{jwtToken}}
+
+###
+
+### Update Category (requires authentication)
+PUT http://{{host}}/wallets/{{walletId}}/categories/{{categoryId}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{jwtToken}}
+
+{
+  "name": "Updated Category Name"
+}
+
+###
+
+### Delete Category (requires authentication)
+DELETE http://{{host}}/wallets/{{walletId}}/categories/{{categoryId}}
 Content-Type: {{contentType}}
 Authorization: Bearer {{jwtToken}}

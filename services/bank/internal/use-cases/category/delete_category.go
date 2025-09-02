@@ -1,12 +1,13 @@
-package usecases
+package category
 
 import (
 	"errors"
 
 	"github.com/lopesgabriel/tellawl/services/bank/internal/domain/repository"
+	usecases "github.com/lopesgabriel/tellawl/services/bank/internal/use-cases"
 )
 
-type DeleteCategoryUseCase struct {
+type deleteCategoryUseCase struct {
 	walletRepository repository.WalletRepository
 }
 
@@ -15,19 +16,19 @@ type DeleteCategoryUseCaseInput struct {
 	CategoryId string
 }
 
-func NewDeleteCategoryUseCase(walletRepository repository.WalletRepository) *DeleteCategoryUseCase {
-	return &DeleteCategoryUseCase{
+func NewDeleteCategoryUseCase(walletRepository repository.WalletRepository) *deleteCategoryUseCase {
+	return &deleteCategoryUseCase{
 		walletRepository: walletRepository,
 	}
 }
 
-func (usecase *DeleteCategoryUseCase) Execute(input DeleteCategoryUseCaseInput) error {
+func (usecase *deleteCategoryUseCase) Execute(input DeleteCategoryUseCaseInput) error {
 	if input.WalletId == "" {
-		return MissingRequiredFieldsError("WalletId")
+		return usecases.MissingRequiredFieldsError("WalletId")
 	}
 
 	if input.CategoryId == "" {
-		return MissingRequiredFieldsError("CategoryId")
+		return usecases.MissingRequiredFieldsError("CategoryId")
 	}
 
 	wallet, err := usecase.walletRepository.FindById(input.WalletId)

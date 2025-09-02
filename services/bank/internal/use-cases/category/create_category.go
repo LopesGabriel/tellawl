@@ -1,39 +1,35 @@
-package usecases
+package category
 
 import (
 	"errors"
 
 	"github.com/lopesgabriel/tellawl/services/bank/internal/domain/models"
 	"github.com/lopesgabriel/tellawl/services/bank/internal/domain/repository"
+	usecases "github.com/lopesgabriel/tellawl/services/bank/internal/use-cases"
 )
 
-type UpdateCategoryUseCase struct {
+type createCategoryUseCase struct {
 	walletRepository repository.WalletRepository
 }
 
-type UpdateCategoryUseCaseInput struct {
-	WalletId   string
-	CategoryId string
-	Name       string
+type CreateCategoryUseCaseInput struct {
+	WalletId string
+	Name     string
 }
 
-func NewUpdateCategoryUseCase(walletRepository repository.WalletRepository) *UpdateCategoryUseCase {
-	return &UpdateCategoryUseCase{
+func NewCreateCategoryUseCase(walletRepository repository.WalletRepository) *createCategoryUseCase {
+	return &createCategoryUseCase{
 		walletRepository: walletRepository,
 	}
 }
 
-func (usecase *UpdateCategoryUseCase) Execute(input UpdateCategoryUseCaseInput) (*models.Category, error) {
+func (usecase *createCategoryUseCase) Execute(input CreateCategoryUseCaseInput) (*models.Category, error) {
 	if input.WalletId == "" {
-		return nil, MissingRequiredFieldsError("WalletId")
-	}
-
-	if input.CategoryId == "" {
-		return nil, MissingRequiredFieldsError("CategoryId")
+		return nil, usecases.MissingRequiredFieldsError("WalletId")
 	}
 
 	if input.Name == "" {
-		return nil, MissingRequiredFieldsError("Name")
+		return nil, usecases.MissingRequiredFieldsError("Name")
 	}
 
 	wallet, err := usecase.walletRepository.FindById(input.WalletId)
@@ -41,7 +37,7 @@ func (usecase *UpdateCategoryUseCase) Execute(input UpdateCategoryUseCaseInput) 
 		return nil, errors.Join(errors.New("wallet not found"), err)
 	}
 
-	category, err := wallet.UpdateCategory(input.CategoryId, input.Name)
+	category, err := wallet.AddCustomCategory(input.Name)
 	if err != nil {
 		return nil, err
 	}

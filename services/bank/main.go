@@ -56,6 +56,18 @@ func setupHttpServer() *mux.Router {
 		walletRepository,
 		VERSION,
 	)
+	getCategoryHandler := controllers.NewGetCategoryHttpHandler(
+		walletRepository,
+		VERSION,
+	)
+	updateCategoryHandler := controllers.NewUpdateCategoryHttpHandler(
+		walletRepository,
+		VERSION,
+	)
+	deleteCategoryHandler := controllers.NewDeleteCategoryHttpHandler(
+		walletRepository,
+		VERSION,
+	)
 
 	router.Handle("/health", healthHandler).Methods("GET")
 	router.Handle("/sign-up", signUpHandler).Methods("POST")
@@ -72,6 +84,9 @@ func setupHttpServer() *mux.Router {
 	// Categories
 	router.Handle("/wallets/{wallet_id}/categories", controllers.JWTAuthMiddleware(createCategoryHandler)).Methods("POST")
 	router.Handle("/wallets/{wallet_id}/categories", controllers.JWTAuthMiddleware(listCategoryHandler)).Methods("GET")
+	router.Handle("/wallets/{wallet_id}/categories/{category_id}", controllers.JWTAuthMiddleware(getCategoryHandler)).Methods("GET")
+	router.Handle("/wallets/{wallet_id}/categories/{category_id}", controllers.JWTAuthMiddleware(updateCategoryHandler)).Methods("PUT")
+	router.Handle("/wallets/{wallet_id}/categories/{category_id}", controllers.JWTAuthMiddleware(deleteCategoryHandler)).Methods("DELETE")
 
 	return router
 }

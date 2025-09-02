@@ -1,13 +1,14 @@
-package usecases
+package category
 
 import (
 	"errors"
 
 	"github.com/lopesgabriel/tellawl/services/bank/internal/domain/models"
 	"github.com/lopesgabriel/tellawl/services/bank/internal/domain/repository"
+	usecases "github.com/lopesgabriel/tellawl/services/bank/internal/use-cases"
 )
 
-type ListCategoriesUseCase struct {
+type listCategoriesUseCase struct {
 	walletRepository repository.WalletRepository
 }
 
@@ -15,15 +16,15 @@ type ListCategoriesUseCaseInput struct {
 	WalletId string
 }
 
-func NewListCategoriesUseCase(walletRepository repository.WalletRepository) *ListCategoriesUseCase {
-	return &ListCategoriesUseCase{
+func NewListCategoriesUseCase(walletRepository repository.WalletRepository) *listCategoriesUseCase {
+	return &listCategoriesUseCase{
 		walletRepository: walletRepository,
 	}
 }
 
-func (usecase *ListCategoriesUseCase) Execute(input ListCategoriesUseCaseInput) ([]models.Category, error) {
+func (usecase *listCategoriesUseCase) Execute(input ListCategoriesUseCaseInput) ([]models.Category, error) {
 	if input.WalletId == "" {
-		return nil, MissingRequiredFieldsError("WalletId")
+		return nil, usecases.MissingRequiredFieldsError("WalletId")
 	}
 
 	wallet, err := usecase.walletRepository.FindById(input.WalletId)
