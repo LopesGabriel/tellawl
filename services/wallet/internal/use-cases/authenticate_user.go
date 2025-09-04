@@ -1,6 +1,7 @@
 package usecases
 
 import (
+	"context"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -11,12 +12,12 @@ type AuthenticateUserUseCaseInput struct {
 	Password string
 }
 
-func (usecase *UseCase) AuthenticateUser(input AuthenticateUserUseCaseInput) (string, error) {
+func (usecase *UseCase) AuthenticateUser(ctx context.Context, input AuthenticateUserUseCaseInput) (string, error) {
 	if input.Email == "" || input.Password == "" {
 		return "", ErrInvalidInput
 	}
 
-	user, err := usecase.repos.User.FindByEmail(input.Email)
+	user, err := usecase.repos.User.FindByEmail(ctx, input.Email)
 	if err != nil {
 		return "", err
 	}

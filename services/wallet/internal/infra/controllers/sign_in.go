@@ -29,7 +29,7 @@ func (handler *APIHandler) HandleSignIn(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	token, err := handler.usecases.AuthenticateUser(usecases.AuthenticateUserUseCaseInput{
+	token, err := handler.usecases.AuthenticateUser(r.Context(), usecases.AuthenticateUserUseCaseInput{
 		Email:    data.Email,
 		Password: data.Password,
 	})

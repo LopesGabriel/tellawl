@@ -1,6 +1,8 @@
 package usecases
 
 import (
+	"context"
+
 	"github.com/lopesgabriel/tellawl/services/bank/internal/domain/models"
 )
 
@@ -13,7 +15,7 @@ type RegisterTransactionUseCaseInput struct {
 	Description                   string
 }
 
-func (usecase *UseCase) RegisterTransaction(input RegisterTransactionUseCaseInput) (*models.Transaction, error) {
+func (usecase *UseCase) RegisterTransaction(ctx context.Context, input RegisterTransactionUseCaseInput) (*models.Transaction, error) {
 	if input.Offset == 0 {
 		input.Offset = 100
 	}
@@ -22,12 +24,12 @@ func (usecase *UseCase) RegisterTransaction(input RegisterTransactionUseCaseInpu
 		return nil, ErrInvalidTransactionType
 	}
 
-	user, err := usecase.repos.User.FindByID(input.TransactionRegisteredByUserId)
+	user, err := usecase.repos.User.FindByID(ctx, input.TransactionRegisteredByUserId)
 	if err != nil {
 		return nil, err
 	}
 
-	wallet, err := usecase.repos.Wallet.FindById(input.WalletId)
+	wallet, err := usecase.repos.Wallet.FindById(ctx, input.WalletId)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +48,7 @@ func (usecase *UseCase) RegisterTransaction(input RegisterTransactionUseCaseInpu
 		return nil, err
 	}
 
-	err = usecase.repos.Wallet.Save(wallet)
+	err = usecase.repos.Wallet.Save(ctx, wallet)
 	if err != nil {
 		return nil, err
 	}

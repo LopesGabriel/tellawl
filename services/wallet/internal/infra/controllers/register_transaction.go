@@ -52,7 +52,7 @@ func (handler *APIHandler) HandleRegisterTransaction(w http.ResponseWriter, r *h
 		return
 	}
 
-	transaction, err := handler.usecases.RegisterTransaction(usecases.RegisterTransactionUseCaseInput{
+	transaction, err := handler.usecases.RegisterTransaction(r.Context(), usecases.RegisterTransactionUseCaseInput{
 		TransactionRegisteredByUserId: creatorId,
 		WalletId:                      walletId,
 		Amount:                        data.Amount,

@@ -50,7 +50,7 @@ func (handler *APIHandler) HandleShareWallet(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	wallet, err := handler.usecases.ShareWallet(usecases.ShareWalletUseCaseInput{
+	wallet, err := handler.usecases.ShareWallet(r.Context(), usecases.ShareWalletUseCaseInput{
 		WalletCreatorId: creatorId,
 		WalletId:        walletId,
 		SharedUserEmail: data.UserEmail,

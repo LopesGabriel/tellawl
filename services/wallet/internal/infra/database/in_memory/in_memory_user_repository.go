@@ -23,7 +23,7 @@ func NewInMemoryUserRepository(publisher ports.EventPublisher) *InMemoryUserRepo
 	}
 }
 
-func (r InMemoryUserRepository) FindByID(id string) (*models.User, error) {
+func (r InMemoryUserRepository) FindByID(ctx context.Context, id string) (*models.User, error) {
 	var user models.User
 
 	for _, u := range r.items {
@@ -40,7 +40,7 @@ func (r InMemoryUserRepository) FindByID(id string) (*models.User, error) {
 	return &user, nil
 }
 
-func (r InMemoryUserRepository) FindByEmail(email string) (*models.User, error) {
+func (r InMemoryUserRepository) FindByEmail(ctx context.Context, email string) (*models.User, error) {
 	var user models.User
 
 	for _, u := range r.items {
@@ -57,8 +57,8 @@ func (r InMemoryUserRepository) FindByEmail(email string) (*models.User, error) 
 	return &user, nil
 }
 
-func (r *InMemoryUserRepository) Save(user *models.User) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+func (r *InMemoryUserRepository) Save(ctx context.Context, user *models.User) error {
+	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
 	defer cancel()
 
 	if user.Id == "" {

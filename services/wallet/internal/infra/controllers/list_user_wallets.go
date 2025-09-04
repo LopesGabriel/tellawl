@@ -23,7 +23,7 @@ func (handler *APIHandler) HandleListUserWallets(w http.ResponseWriter, r *http.
 		return
 	}
 
-	wallets, err := handler.usecases.ListUserWallets(usecases.ListUserWalletsUseCaseInput{
+	wallets, err := handler.usecases.ListUserWallets(r.Context(), usecases.ListUserWalletsUseCaseInput{
 		UserId: userId,
 	})
 

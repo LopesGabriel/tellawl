@@ -1,6 +1,7 @@
 package usecases
 
 import (
+	"context"
 	"errors"
 	"strings"
 
@@ -14,7 +15,7 @@ type CreateUserUseCaseInput struct {
 	Password  string
 }
 
-func (usecase *UseCase) CreateUser(input CreateUserUseCaseInput) (*models.User, error) {
+func (usecase *UseCase) CreateUser(ctx context.Context, input CreateUserUseCaseInput) (*models.User, error) {
 	if input.FirstName == "" {
 		return nil, MissingRequiredFieldsError("FirstName")
 	}
@@ -31,7 +32,7 @@ func (usecase *UseCase) CreateUser(input CreateUserUseCaseInput) (*models.User, 
 		return nil, MissingRequiredFieldsError("Password")
 	}
 
-	existingUser, err := usecase.repos.User.FindByEmail(input.Email)
+	existingUser, err := usecase.repos.User.FindByEmail(ctx, input.Email)
 	if err != nil {
 		if !strings.Contains(err.Error(), "user not found") {
 			return nil, errors.Join(errors.New("could not validate existing user"), err)
@@ -47,7 +48,7 @@ func (usecase *UseCase) CreateUser(input CreateUserUseCaseInput) (*models.User, 
 		return nil, errors.Join(errors.New("could not create user"), err)
 	}
 
-	if err := usecase.repos.User.Save(user); err != nil {
+	if err := usecase.repos.User.Save(ctx, user); err != nil {
 		return nil, errors.Join(errors.New("could not persist the user"), err)
 	}
 

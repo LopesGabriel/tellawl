@@ -27,9 +27,9 @@ func TestWalletCreation(t *testing.T) {
 		Email:     "example@example.com",
 		CreatedAt: time.Now(),
 	}
-	repos.User.Save(&user)
+	repos.User.Save(t.Context(), &user)
 
-	wallet, err := useCases.CreateWallet(usecases.CreateWalletUseCaseInput{
+	wallet, err := useCases.CreateWallet(t.Context(), usecases.CreateWalletUseCaseInput{
 		CreatorID: userId,
 		Name:      "My Wallet",
 	})
@@ -42,7 +42,7 @@ func TestWalletCreation(t *testing.T) {
 		t.Errorf("Expected wallet name to be 'My Wallet', got %v", wallet.Name)
 	}
 
-	persistedWallet, err := repos.Wallet.FindById(wallet.Id)
+	persistedWallet, err := repos.Wallet.FindById(t.Context(), wallet.Id)
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}

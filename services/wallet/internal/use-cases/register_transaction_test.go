@@ -22,12 +22,12 @@ func TestRegisterTransactionUseCase(t *testing.T) {
 		useCases := usecases.NewUseCases(useCaseArgs)
 
 		user, _ := models.CreateNewUser("Matheus", "Lopes", "matheus@example.com", "pw2")
-		repos.User.Save(user)
+		repos.User.Save(t.Context(), user)
 
 		wallet := models.CreateNewWallet("Test wallet", user)
-		repos.Wallet.Save(wallet)
+		repos.Wallet.Save(t.Context(), wallet)
 
-		transaction, err := useCases.RegisterTransaction(usecases.RegisterTransactionUseCaseInput{
+		transaction, err := useCases.RegisterTransaction(t.Context(), usecases.RegisterTransactionUseCaseInput{
 			TransactionRegisteredByUserId: user.Id,
 			WalletId:                      wallet.Id,
 			Amount:                        1000000,
@@ -46,7 +46,7 @@ func TestRegisterTransactionUseCase(t *testing.T) {
 			t.Errorf("Expected transaction offset to be 100, got %v", transaction.Amount.Offset)
 		}
 
-		wallet, err = repos.Wallet.FindById(wallet.Id)
+		wallet, err = repos.Wallet.FindById(t.Context(), wallet.Id)
 		if err != nil {
 			t.Errorf("Expected no error, got %v", err)
 		}
@@ -65,12 +65,12 @@ func TestRegisterTransactionUseCase(t *testing.T) {
 		useCases := usecases.NewUseCases(useCaseArgs)
 
 		user, _ := models.CreateNewUser("Matheus", "Lopes", "matheus@example.com", "pw2")
-		repos.User.Save(user)
+		repos.User.Save(t.Context(), user)
 
 		wallet := models.CreateNewWallet("Test wallet", user)
-		repos.Wallet.Save(wallet)
+		repos.Wallet.Save(t.Context(), wallet)
 
-		transaction, err := useCases.RegisterTransaction(usecases.RegisterTransactionUseCaseInput{
+		transaction, err := useCases.RegisterTransaction(t.Context(), usecases.RegisterTransactionUseCaseInput{
 			TransactionRegisteredByUserId: user.Id,
 			WalletId:                      wallet.Id,
 			Amount:                        3000000,
@@ -90,7 +90,7 @@ func TestRegisterTransactionUseCase(t *testing.T) {
 			t.Errorf("Expected transaction offset to be 1000, got %v", transaction.Amount.Offset)
 		}
 
-		wallet, err = repos.Wallet.FindById(wallet.Id)
+		wallet, err = repos.Wallet.FindById(t.Context(), wallet.Id)
 		if err != nil {
 			t.Errorf("Expected no error, got %v", err)
 		}
@@ -110,13 +110,13 @@ func TestRegisterTransactionUseCase(t *testing.T) {
 
 		user, _ := models.CreateNewUser("Gabriel", "Lopes", "gabriel@example.com", "pw1")
 		user2, _ := models.CreateNewUser("Matheus", "Lopes", "matheus@example.com", "pw2")
-		repos.User.Save(user)
-		repos.User.Save(user2)
+		repos.User.Save(t.Context(), user)
+		repos.User.Save(t.Context(), user2)
 
 		wallet := models.CreateNewWallet("Test wallet", user)
-		repos.Wallet.Save(wallet)
+		repos.Wallet.Save(t.Context(), wallet)
 
-		_, err := useCases.RegisterTransaction(usecases.RegisterTransactionUseCaseInput{
+		_, err := useCases.RegisterTransaction(t.Context(), usecases.RegisterTransactionUseCaseInput{
 			TransactionRegisteredByUserId: user2.Id,
 			WalletId:                      wallet.Id,
 			Amount:                        10000,
@@ -129,7 +129,7 @@ func TestRegisterTransactionUseCase(t *testing.T) {
 			t.Errorf("Expected insufficient permissions error, got %v", err)
 		}
 
-		wallet, err = repos.Wallet.FindById(wallet.Id)
+		wallet, err = repos.Wallet.FindById(t.Context(), wallet.Id)
 		if err != nil {
 			t.Errorf("Expected no error, got %v", err)
 		}
@@ -149,15 +149,15 @@ func TestRegisterTransactionUseCase(t *testing.T) {
 
 		user, _ := models.CreateNewUser("Gabriel", "Lopes", "gabriel@example.com", "pw1")
 		user2, _ := models.CreateNewUser("Matheus", "Lopes", "matheus@example.com", "pw2")
-		repos.User.Save(user)
-		repos.User.Save(user2)
+		repos.User.Save(t.Context(), user)
+		repos.User.Save(t.Context(), user2)
 
 		wallet := models.CreateNewWallet("Test wallet", user)
-		repos.Wallet.Save(wallet)
+		repos.Wallet.Save(t.Context(), wallet)
 		wallet.AddUser(user2)
-		repos.Wallet.Save(wallet)
+		repos.Wallet.Save(t.Context(), wallet)
 
-		_, err := useCases.RegisterTransaction(usecases.RegisterTransactionUseCaseInput{
+		_, err := useCases.RegisterTransaction(t.Context(), usecases.RegisterTransactionUseCaseInput{
 			TransactionRegisteredByUserId: user2.Id,
 			WalletId:                      wallet.Id,
 			Amount:                        350000,
@@ -169,7 +169,7 @@ func TestRegisterTransactionUseCase(t *testing.T) {
 			t.Errorf("Expected no error, got %v", err)
 		}
 
-		wallet, err = repos.Wallet.FindById(wallet.Id)
+		wallet, err = repos.Wallet.FindById(t.Context(), wallet.Id)
 		if err != nil {
 			t.Errorf("Expected no error, got %v", err)
 		}

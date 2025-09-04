@@ -1,6 +1,8 @@
 package usecases
 
 import (
+	"context"
+
 	"github.com/lopesgabriel/tellawl/services/bank/internal/domain/models"
 )
 
@@ -10,13 +12,13 @@ type ShareWalletUseCaseInput struct {
 	SharedUserEmail string
 }
 
-func (usecase *UseCase) ShareWallet(input ShareWalletUseCaseInput) (*models.Wallet, error) {
-	creatorUser, err := usecase.repos.User.FindByID(input.WalletCreatorId)
+func (usecase *UseCase) ShareWallet(ctx context.Context, input ShareWalletUseCaseInput) (*models.Wallet, error) {
+	creatorUser, err := usecase.repos.User.FindByID(ctx, input.WalletCreatorId)
 	if err != nil {
 		return nil, err
 	}
 
-	wallet, err := usecase.repos.Wallet.FindById(input.WalletId)
+	wallet, err := usecase.repos.Wallet.FindById(ctx, input.WalletId)
 	if err != nil {
 		return nil, err
 	}
@@ -25,13 +27,13 @@ func (usecase *UseCase) ShareWallet(input ShareWalletUseCaseInput) (*models.Wall
 		return nil, ErrInsufficientPermissions
 	}
 
-	sharedUser, err := usecase.repos.User.FindByEmail(input.SharedUserEmail)
+	sharedUser, err := usecase.repos.User.FindByEmail(ctx, input.SharedUserEmail)
 	if err != nil {
 		return nil, err
 	}
 
 	wallet.AddUser(sharedUser)
-	err = usecase.repos.Wallet.Save(wallet)
+	err = usecase.repos.Wallet.Save(ctx, wallet)
 	if err != nil {
 		return nil, err
 	}

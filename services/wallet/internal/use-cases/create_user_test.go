@@ -16,7 +16,7 @@ func TestUserCreation(t *testing.T) {
 		Repos:     repos,
 	})
 
-	user, err := usecases.CreateUser(usecase.CreateUserUseCaseInput{
+	user, err := usecases.CreateUser(t.Context(), usecase.CreateUserUseCaseInput{
 		FirstName: "Gabriel",
 		LastName:  "Lopes",
 		Email:     "lopesgabriel@example.com",

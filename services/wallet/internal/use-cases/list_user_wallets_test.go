@@ -23,17 +23,17 @@ func TestListUserWalletsUseCase(t *testing.T) {
 		user, _ := models.CreateNewUser("Gabriel", "Lopes", "gabriel@example.com", "pw1")
 		user2, _ := models.CreateNewUser("Matheus", "Lopes", "matheus@example.com", "pw2")
 
-		repos.User.Save(user)
-		repos.User.Save(user2)
+		repos.User.Save(t.Context(), user)
+		repos.User.Save(t.Context(), user2)
 
 		wallet := models.CreateNewWallet("Test wallet", user)
 		wallet.AddUser(user2)
-		repos.Wallet.Save(wallet)
+		repos.Wallet.Save(t.Context(), wallet)
 
 		wallet2 := models.CreateNewWallet("Test wallet 2", user2)
-		repos.Wallet.Save(wallet2)
+		repos.Wallet.Save(t.Context(), wallet2)
 
-		wallets, err := useCases.ListUserWallets(usecases.ListUserWalletsUseCaseInput{
+		wallets, err := useCases.ListUserWallets(t.Context(), usecases.ListUserWalletsUseCaseInput{
 			UserId: user2.Id,
 		})
 

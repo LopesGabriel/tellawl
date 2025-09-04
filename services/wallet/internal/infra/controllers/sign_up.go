@@ -31,7 +31,7 @@ func (handler *APIHandler) HandleSignUp(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	user, err := handler.usecases.CreateUser(usecases.CreateUserUseCaseInput{
+	user, err := handler.usecases.CreateUser(r.Context(), usecases.CreateUserUseCaseInput{
 		FirstName: data.FirstName,
 		LastName:  data.LastName,
 		Email:     data.Email,
@@ -48,7 +48,7 @@ func (handler *APIHandler) HandleSignUp(w http.ResponseWriter, r *http.Request) 
 
 	httpUser := presenter.NewHTTPUser(*user)
 
-	token, err := handler.usecases.AuthenticateUser(usecases.AuthenticateUserUseCaseInput{
+	token, err := handler.usecases.AuthenticateUser(r.Context(), usecases.AuthenticateUserUseCaseInput{
 		Email:    data.Email,
 		Password: data.Password,
 	})

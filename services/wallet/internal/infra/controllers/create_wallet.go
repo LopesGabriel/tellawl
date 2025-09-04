@@ -39,7 +39,7 @@ func (handler *APIHandler) HandleCreateWallet(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	wallet, err := handler.usecases.CreateWallet(usecases.CreateWalletUseCaseInput{
+	wallet, err := handler.usecases.CreateWallet(r.Context(), usecases.CreateWalletUseCaseInput{
 		CreatorID: creatorId,
 		Name:      data.WalletName,
 	})

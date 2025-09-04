@@ -23,8 +23,8 @@ func NewInMemoryWalletRepository(publisher ports.EventPublisher) *InMemoryWallet
 	}
 }
 
-func (r *InMemoryWalletRepository) Save(wallet *models.Wallet) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+func (r *InMemoryWalletRepository) Save(ctx context.Context, wallet *models.Wallet) error {
+	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
 	defer cancel()
 
 	if wallet.Id == "" {
@@ -53,7 +53,7 @@ func (r *InMemoryWalletRepository) Save(wallet *models.Wallet) error {
 	return nil
 }
 
-func (r InMemoryWalletRepository) FindById(id string) (*models.Wallet, error) {
+func (r InMemoryWalletRepository) FindById(ctx context.Context, id string) (*models.Wallet, error) {
 	var wallet models.Wallet
 
 	for _, w := range r.items {
@@ -70,7 +70,7 @@ func (r InMemoryWalletRepository) FindById(id string) (*models.Wallet, error) {
 	return &wallet, nil
 }
 
-func (r InMemoryWalletRepository) FindByUserId(userId string) ([]models.Wallet, error) {
+func (r InMemoryWalletRepository) FindByUserId(ctx context.Context, userId string) ([]models.Wallet, error) {
 	var wallets []models.Wallet
 
 	for _, wallet := range r.items {

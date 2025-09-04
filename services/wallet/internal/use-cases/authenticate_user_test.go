@@ -19,9 +19,9 @@ func TestAuthenticateUser(t *testing.T) {
 
 	password := "S4mpl3P4ssW0rd"
 	user, _ := models.CreateNewUser("Gabriel", "Lopes", "example@example.com", password)
-	repos.User.Save(user)
+	repos.User.Save(t.Context(), user)
 
-	token, err := usecases.AuthenticateUser(usecase.AuthenticateUserUseCaseInput{
+	token, err := usecases.AuthenticateUser(t.Context(), usecase.AuthenticateUserUseCaseInput{
 		Email:    "example@example.com",
 		Password: password,
 	})
