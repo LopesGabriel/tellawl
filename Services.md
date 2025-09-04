@@ -2,7 +2,7 @@
 
 List of services and a resume of it responsabilities
 
-## Bank
+## Wallet
 
 This is the core service, responsible for the main logic of managing the wallets,
 and registering the transactions.
