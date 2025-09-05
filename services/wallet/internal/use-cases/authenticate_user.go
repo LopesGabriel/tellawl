@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"context"
+	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -32,5 +33,5 @@ func (usecase *UseCase) AuthenticateUser(ctx context.Context, input Authenticate
 		"exp": time.Now().Add(time.Hour * 2).Unix(),
 	})
 
-	return token.SignedString([]byte(usecase.jwtSecret))
+	return token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 }

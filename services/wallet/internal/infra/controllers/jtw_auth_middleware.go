@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 	"net/http"
+	"os"
 	"strings"
 
 	jwt "github.com/golang-jwt/jwt/v5"
@@ -12,7 +13,6 @@ type contextKey string
 
 const (
 	userContextKey = contextKey("user")
-	jwtSecret      = "your-secret-key" // TODO: move to env var
 )
 
 func jwtAuthMiddleware(next http.Handler) http.Handler {
@@ -42,7 +42,7 @@ func jwtAuthMiddleware(next http.Handler) http.Handler {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, jwt.ErrSignatureInvalid
 			}
-			return []byte(jwtSecret), nil
+			return []byte(os.Getenv("JWT_SECRET")), nil
 		})
 
 		if err != nil || !token.Valid {

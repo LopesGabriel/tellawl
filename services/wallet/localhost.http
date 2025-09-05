@@ -2,8 +2,8 @@
 @port = 8080
 @host = {{hostname}}:{{port}}
 @contentType = application/json
-@jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTY3ODUzNjcsImlzcyI6ImNvbS50ZWxsYXcuYmFuayIsInN1YiI6ImExYTBiMjllLTRkZjMtNGU3OC1iYjY3LWQ2OTdhOTM3NzU4MSJ9.FhYl__hTD3DBuaOkuvRQh3R65mBQlF7ewGvtD-xLVnU
-@walletId = a33ce379-b8e7-4d5c-9c59-b65d567c48e1
+@jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTcwNDIwODMsImlzcyI6ImNvbS50ZWxsYXcuYmFuayIsInN1YiI6IjhkMzc2NmJiLTZjMWEtNGVkMi1hM2I3LTI0NTc0M2NhZjFhYSJ9.Rkhe3nbyYMaRwBfM7yaQXyEEW5WqPK3LHIgG-F3dCqM
+@walletId = 09e4f61a-955c-449b-a7c5-14ed243e7fe2
 
 ###
 
@@ -71,7 +71,7 @@ Content-Type: {{contentType}}
 Authorization: Bearer {{jwtToken}}
 
 {
-  "amount": 546600,
-  "transaction_type": "deposit",
-  "description": "Monthly salary deposit"
+  "amount": 24000,
+  "transaction_type": "withdraw",
+  "description": "September Consortium"
 }

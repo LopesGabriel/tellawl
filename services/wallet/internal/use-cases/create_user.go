@@ -34,7 +34,7 @@ func (usecase *UseCase) CreateUser(ctx context.Context, input CreateUserUseCaseI
 
 	existingUser, err := usecase.repos.User.FindByEmail(ctx, input.Email)
 	if err != nil {
-		if !strings.Contains(err.Error(), "user not found") {
+		if !strings.Contains(err.Error(), "user not found") && !strings.Contains(err.Error(), "no rows in result set") {
 			return nil, errors.Join(errors.New("could not validate existing user"), err)
 		}
 	}

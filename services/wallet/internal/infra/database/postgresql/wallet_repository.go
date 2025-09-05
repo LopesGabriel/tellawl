@@ -3,7 +3,7 @@ package postgresql
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
+	"log/slog"
 	"time"
 
 	"github.com/lopesgabriel/tellawl/services/bank/internal/domain/models"
@@ -140,22 +140,14 @@ func (r *PostgreSQLWalletRepository) Save(ctx context.Context, wallet *models.Wa
 		return err
 	}
 
-	// Save wallet users
-	_, err = tx.Exec("DELETE FROM wallet_users WHERE wallet_id = $1", wallet.Id)
+	// Sync wallet users
+	err = r.syncWalletUsers(tx, wallet.Id, wallet.Users)
 	if err != nil {
 		return err
 	}
 
-	for _, user := range wallet.Users {
-		_, err = tx.Exec("INSERT INTO wallet_users (wallet_id, user_id) VALUES ($1, $2)", wallet.Id, user.Id)
-		if err != nil {
-			return err
-		}
-	}
-
 	// Save transactions
 	for _, transaction := range wallet.Transactions {
-		createdByJSON, _ := json.Marshal(transaction.CreatedBy)
 		_, err = tx.Exec(`INSERT INTO transactions (id, wallet_id, amount_value, amount_offset, created_by, type, description, created_at)
 						  VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 						  ON CONFLICT (id) DO NOTHING`,
@@ -163,7 +155,7 @@ func (r *PostgreSQLWalletRepository) Save(ctx context.Context, wallet *models.Wa
 			wallet.Id,
 			transaction.Amount.Value,
 			transaction.Amount.Offset,
-			createdByJSON,
+			transaction.CreatedBy.Id,
 			string(transaction.Type),
 			transaction.Description,
 			transaction.CreatedAt,
@@ -173,7 +165,17 @@ func (r *PostgreSQLWalletRepository) Save(ctx context.Context, wallet *models.Wa
 		}
 	}
 
-	return tx.Commit()
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
+	if err := r.publisher.Publish(ctx, wallet.Events()); err != nil {
+		slog.Error("error publishing events", slog.String("error", err.Error()))
+	}
+	wallet.ClearEvents()
+
+	return err
 }
 
 func (r *PostgreSQLWalletRepository) loadWalletUsers(walletId string) ([]models.User, error) {
@@ -219,9 +221,12 @@ func (r *PostgreSQLWalletRepository) loadWalletUsers(walletId string) ([]models.
 }
 
 func (r *PostgreSQLWalletRepository) loadWalletTransactions(walletId string) ([]models.Transaction, error) {
-	query := `SELECT id, amount_value, amount_offset, created_by, type, description, created_at
-			  FROM transactions WHERE wallet_id = $1 ORDER BY created_at DESC`
-
+	query := `SELECT t.id, t.amount_value, t.amount_offset, t.type, t.description, t.created_at,
+                    u.id as user_id, u.first_name, u.last_name, u.email
+			  FROM transactions t
+			  JOIN users u ON t.created_by = u.id 
+			  WHERE t.wallet_id = $1
+			  ORDER BY t.created_at DESC`
 	rows, err := r.db.Query(query, walletId)
 	if err != nil {
 		return nil, err
@@ -232,29 +237,74 @@ func (r *PostgreSQLWalletRepository) loadWalletTransactions(walletId string) ([]
 
 	for rows.Next() {
 		var transaction models.Transaction
-		var createdByJSON []byte
+		var user models.User
 
 		err := rows.Scan(
 			&transaction.Id,
 			&transaction.Amount.Value,
 			&transaction.Amount.Offset,
-			&createdByJSON,
 			&transaction.Type,
 			&transaction.Description,
 			&transaction.CreatedAt,
+			&user.Id,
+			&user.FirstName,
+			&user.LastName,
+			&user.Email,
 		)
 
 		if err != nil {
 			return nil, err
 		}
 
-		err = json.Unmarshal(createdByJSON, &transaction.CreatedBy)
-		if err != nil {
-			return nil, err
-		}
-
+		transaction.CreatedBy = user
 		transactions = append(transactions, transaction)
 	}
 
 	return transactions, nil
+}
+
+func (r *PostgreSQLWalletRepository) syncWalletUsers(tx *sql.Tx, walletId string, users []models.User) error {
+	// Get current user IDs
+	rows, err := tx.Query("SELECT user_id FROM wallet_users WHERE wallet_id = $1", walletId)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	currentUsers := make(map[string]bool)
+	for rows.Next() {
+		var userId string
+		if err := rows.Scan(&userId); err != nil {
+			return err
+		}
+		currentUsers[userId] = true
+	}
+
+	// Build new user set
+	newUsers := make(map[string]bool)
+	for _, user := range users {
+		newUsers[user.Id] = true
+	}
+
+	// Remove users not in new set
+	for userId := range currentUsers {
+		if !newUsers[userId] {
+			_, err = tx.Exec("DELETE FROM wallet_users WHERE wallet_id = $1 AND user_id = $2", walletId, userId)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	// Add new users
+	for userId := range newUsers {
+		if !currentUsers[userId] {
+			_, err = tx.Exec("INSERT INTO wallet_users (wallet_id, user_id, assigned_at) VALUES ($1, $2, $3)", walletId, userId, time.Now())
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
