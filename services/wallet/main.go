@@ -15,7 +15,6 @@ import (
 )
 
 const VERSION = "1.0.0"
-const JWT_SECRET = "ex4mpl3-Secr3t"
 const PORT = 8080
 
 func main() {
@@ -50,7 +49,7 @@ func main() {
 
 	repos := repository.NewPostgreSQL(db, publisher)
 	useCases := usecases.NewUseCases(usecases.NewUseCasesArgs{
-		JwtSecret: JWT_SECRET,
+		JwtSecret: os.Getenv("JWT_SECRET"),
 		Repos:     repos,
 	})
 	apiHandler := controllers.NewAPIHandler(useCases, VERSION)
