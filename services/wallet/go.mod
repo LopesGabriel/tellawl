@@ -1,4 +1,4 @@
-module github.com/lopesgabriel/tellawl/services/bank
+module github.com/lopesgabriel/tellawl/services/wallet
 
 go 1.24.4
 

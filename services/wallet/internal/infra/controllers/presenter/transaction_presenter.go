@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/lopesgabriel/tellawl/services/bank/internal/domain/models"
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/models"
 )
 
 type HTTPTransaction struct {

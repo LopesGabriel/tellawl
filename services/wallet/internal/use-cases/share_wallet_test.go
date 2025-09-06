@@ -3,10 +3,10 @@ package usecases_test
 import (
 	"testing"
 
-	"github.com/lopesgabriel/tellawl/services/bank/internal/domain/models"
-	"github.com/lopesgabriel/tellawl/services/bank/internal/domain/repository"
-	"github.com/lopesgabriel/tellawl/services/bank/internal/infra/events"
-	usecases "github.com/lopesgabriel/tellawl/services/bank/internal/use-cases"
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/models"
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/repository"
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/events"
+	usecases "github.com/lopesgabriel/tellawl/services/wallet/internal/use-cases"
 )
 
 func TestShareWalletUseCase(t *testing.T) {

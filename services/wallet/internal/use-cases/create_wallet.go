@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/lopesgabriel/tellawl/services/bank/internal/domain/models"
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/models"
 )
 
 type CreateWalletUseCaseInput struct {

@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/lopesgabriel/tellawl/services/bank/internal/infra/controllers/presenter"
-	usecases "github.com/lopesgabriel/tellawl/services/bank/internal/use-cases"
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/controllers/presenter"
+	usecases "github.com/lopesgabriel/tellawl/services/wallet/internal/use-cases"
 )
 
 type createWalletRequest struct {

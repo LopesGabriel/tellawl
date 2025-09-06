@@ -4,10 +4,10 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/lopesgabriel/tellawl/services/bank/internal/domain/models"
-	"github.com/lopesgabriel/tellawl/services/bank/internal/domain/ports"
-	inmemory "github.com/lopesgabriel/tellawl/services/bank/internal/infra/database/in_memory"
-	"github.com/lopesgabriel/tellawl/services/bank/internal/infra/database/postgresql"
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/models"
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/ports"
+	inmemory "github.com/lopesgabriel/tellawl/services/wallet/internal/infra/database/in_memory"
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/database/postgresql"
 )
 
 type Repositories struct {

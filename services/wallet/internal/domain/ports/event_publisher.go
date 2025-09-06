@@ -3,7 +3,7 @@ package ports
 import (
 	"context"
 
-	"github.com/lopesgabriel/tellawl/services/bank/internal/domain/events"
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/events"
 )
 
 type EventPublisher interface {

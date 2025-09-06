@@ -1,7 +1,7 @@
 package usecases
 
 import (
-	"github.com/lopesgabriel/tellawl/services/bank/internal/domain/repository"
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/repository"
 )
 
 type UseCase struct {

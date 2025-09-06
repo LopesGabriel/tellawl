@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	usecases "github.com/lopesgabriel/tellawl/services/bank/internal/use-cases"
+	usecases "github.com/lopesgabriel/tellawl/services/wallet/internal/use-cases"
 )
 
 type signInRequest struct {

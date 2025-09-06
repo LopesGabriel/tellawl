@@ -6,30 +6,22 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/joho/godotenv"
-	"github.com/lopesgabriel/tellawl/services/bank/internal/domain/repository"
-	"github.com/lopesgabriel/tellawl/services/bank/internal/infra/controllers"
-	"github.com/lopesgabriel/tellawl/services/bank/internal/infra/database"
-	"github.com/lopesgabriel/tellawl/services/bank/internal/infra/events"
-	usecases "github.com/lopesgabriel/tellawl/services/bank/internal/use-cases"
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/core"
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/repository"
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/controllers"
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/database"
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/events"
+	usecases "github.com/lopesgabriel/tellawl/services/wallet/internal/use-cases"
 )
 
-const VERSION = "1.0.0"
-const PORT = 8080
-
 func main() {
-	slog.Info("Starting Wallet Service", slog.String("version", VERSION))
-	err := godotenv.Load()
-	if err != nil {
-		panic("Error loading .env file")
-	}
-
 	slog.SetLogLoggerLevel(slog.LevelDebug)
+	slog.Info("Starting Wallet Service")
 
-	dbConnectionString := os.Getenv("POSTGRESQL_URL")
+	appConfig := core.InitAppConfigurations()
 
 	slog.Info("Starting database interface")
-	db, err := database.NewPostgresClient(context.Background(), dbConnectionString)
+	db, err := database.NewPostgresClient(context.Background(), appConfig.DatabaseUrl)
 	if err != nil {
 		panic(err)
 	}
@@ -40,7 +32,7 @@ func main() {
 	}
 	slog.Info("Successfully connected to database")
 
-	err = database.MigrateUp(os.Getenv("MIGRATE_URL"), dbConnectionString)
+	err = database.MigrateUp(appConfig.MigrationUrl, appConfig.DatabaseUrl)
 	if err != nil {
 		panic(err)
 	}
@@ -52,8 +44,11 @@ func main() {
 		JwtSecret: os.Getenv("JWT_SECRET"),
 		Repos:     repos,
 	})
-	apiHandler := controllers.NewAPIHandler(useCases, VERSION)
+	apiHandler := controllers.NewAPIHandler(useCases, appConfig.Version)
 
-	slog.Info(fmt.Sprintf("API Server listenig on port %d", PORT))
-	apiHandler.Listen(PORT)
+	slog.Info(
+		fmt.Sprintf("API Server listenig on port %d", appConfig.Port),
+		slog.String("version", appConfig.Version),
+	)
+	apiHandler.Listen(appConfig.Port)
 }

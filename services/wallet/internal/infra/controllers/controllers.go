@@ -3,10 +3,11 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 
 	"github.com/gorilla/mux"
-	usecases "github.com/lopesgabriel/tellawl/services/bank/internal/use-cases"
+	usecases "github.com/lopesgabriel/tellawl/services/wallet/internal/use-cases"
 )
 
 type APIHandler struct {
@@ -23,6 +24,8 @@ func NewAPIHandler(usecases *usecases.UseCase, version string) *APIHandler {
 
 func (handler *APIHandler) registerEndpoints() *mux.Router {
 	router := mux.NewRouter()
+
+	router.Use(handler.requestInterceptorMiddleware)
 
 	router.HandleFunc("/health", handler.HandleHealthCheck).Methods("GET")
 	router.HandleFunc("/sign-up", handler.HandleSignUp).Methods("POST")
@@ -55,4 +58,16 @@ func WriteError(w http.ResponseWriter, statusCode int, payload map[string]any) {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	w.Write(result)
+}
+
+func (handler *APIHandler) requestInterceptorMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("X-Server-Version", handler.version)
+		slog.Debug(
+			"Received new request",
+			slog.String("method", r.Method),
+			slog.String("path", r.URL.Path),
+		)
+		next.ServeHTTP(w, r)
+	})
 }

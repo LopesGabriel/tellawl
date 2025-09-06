@@ -3,7 +3,7 @@ package usecases
 import (
 	"context"
 
-	"github.com/lopesgabriel/tellawl/services/bank/internal/domain/models"
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/models"
 )
 
 type ListUserWalletsUseCaseInput struct {

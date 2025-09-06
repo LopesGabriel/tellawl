@@ -6,8 +6,8 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/mux"
-	"github.com/lopesgabriel/tellawl/services/bank/internal/infra/controllers/presenter"
-	usecases "github.com/lopesgabriel/tellawl/services/bank/internal/use-cases"
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/controllers/presenter"
+	usecases "github.com/lopesgabriel/tellawl/services/wallet/internal/use-cases"
 )
 
 type registerTransactionRequest struct {

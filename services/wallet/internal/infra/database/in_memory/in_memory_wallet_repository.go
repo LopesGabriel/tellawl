@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/lopesgabriel/tellawl/services/bank/internal/domain/models"
-	"github.com/lopesgabriel/tellawl/services/bank/internal/domain/ports"
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/models"
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/ports"
 )
 
 type InMemoryWalletRepository struct {
