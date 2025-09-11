@@ -8,25 +8,35 @@ import (
 
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/models"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/ports"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type PostgreSQLUserRepository struct {
 	db        *sql.DB
 	publisher ports.EventPublisher
+	tracer    trace.Tracer
 }
 
 func NewPostgreSQLUserRepository(db *sql.DB, publisher ports.EventPublisher) *PostgreSQLUserRepository {
+	tracer := otel.Tracer("postgres-user-repository")
+
 	return &PostgreSQLUserRepository{
 		db:        db,
 		publisher: publisher,
+		tracer:    tracer,
 	}
 }
 
 func (r *PostgreSQLUserRepository) FindByID(ctx context.Context, id string) (*models.User, error) {
+	ctx, span := r.tracer.Start(ctx, "PostgreSQLUserRepository.FindByID")
+	defer span.End()
+
 	query := `SELECT id, first_name, last_name, email, hashed_password, created_at, updated_at 
 			  FROM users WHERE id = $1`
 
-	row := r.db.QueryRow(query, id)
+	row := r.db.QueryRowContext(ctx, query, id)
 
 	var user models.User
 	var updatedAt sql.NullTime
@@ -42,6 +52,7 @@ func (r *PostgreSQLUserRepository) FindByID(ctx context.Context, id string) (*mo
 	)
 
 	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 
@@ -49,14 +60,18 @@ func (r *PostgreSQLUserRepository) FindByID(ctx context.Context, id string) (*mo
 		user.UpdatedAt = &updatedAt.Time
 	}
 
+	span.SetStatus(codes.Ok, "User found")
 	return &user, nil
 }
 
 func (r *PostgreSQLUserRepository) FindByEmail(ctx context.Context, email string) (*models.User, error) {
+	ctx, span := r.tracer.Start(ctx, "PostgreSQLUserRepository.FindByEmail")
+	defer span.End()
+
 	query := `SELECT id, first_name, last_name, email, hashed_password, created_at, updated_at 
 			  FROM users WHERE email = $1`
 
-	row := r.db.QueryRow(query, email)
+	row := r.db.QueryRowContext(ctx, query, email)
 
 	var user models.User
 	var updatedAt sql.NullTime
@@ -72,6 +87,7 @@ func (r *PostgreSQLUserRepository) FindByEmail(ctx context.Context, email string
 	)
 
 	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 
@@ -79,10 +95,14 @@ func (r *PostgreSQLUserRepository) FindByEmail(ctx context.Context, email string
 		user.UpdatedAt = &updatedAt.Time
 	}
 
+	span.SetStatus(codes.Ok, "User found")
 	return &user, nil
 }
 
 func (r *PostgreSQLUserRepository) Save(ctx context.Context, user *models.User) error {
+	ctx, span := r.tracer.Start(ctx, "PostgreSQLUserRepository.Save")
+	defer span.End()
+
 	query := `INSERT INTO users (id, first_name, last_name, email, hashed_password, created_at, updated_at)
 			  VALUES ($1, $2, $3, $4, $5, $6, $7)
 			  ON CONFLICT (id) DO UPDATE SET
@@ -104,6 +124,7 @@ func (r *PostgreSQLUserRepository) Save(ctx context.Context, user *models.User) 
 		now,
 	)
 	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
 		return err
 	}
 
@@ -112,5 +133,6 @@ func (r *PostgreSQLUserRepository) Save(ctx context.Context, user *models.User) 
 	}
 	user.ClearEvents()
 
+	span.SetStatus(codes.Ok, "User saved")
 	return err
 }

@@ -8,25 +8,35 @@ import (
 
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/models"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/ports"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type PostgreSQLWalletRepository struct {
 	db        *sql.DB
 	publisher ports.EventPublisher
+	tracer    trace.Tracer
 }
 
 func NewPostgreSQLWalletRepository(db *sql.DB, publisher ports.EventPublisher) *PostgreSQLWalletRepository {
+	tracer := otel.Tracer("postgres-wallet-repository")
+
 	return &PostgreSQLWalletRepository{
 		db:        db,
 		publisher: publisher,
+		tracer:    tracer,
 	}
 }
 
 func (r *PostgreSQLWalletRepository) FindById(ctx context.Context, id string) (*models.Wallet, error) {
+	ctx, span := r.tracer.Start(ctx, "PostgreSQLWalletRepository.FindByID")
+	defer span.End()
+
 	query := `SELECT id, creator_id, name, balance_value, balance_offset, created_at, updated_at 
 			  FROM wallets WHERE id = $1`
 
-	row := r.db.QueryRow(query, id)
+	row := r.db.QueryRowContext(ctx, query, id)
 
 	var wallet models.Wallet
 	var updatedAt sql.NullTime
@@ -42,6 +52,7 @@ func (r *PostgreSQLWalletRepository) FindById(ctx context.Context, id string) (*
 	)
 
 	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 
@@ -50,30 +61,37 @@ func (r *PostgreSQLWalletRepository) FindById(ctx context.Context, id string) (*
 	}
 
 	// Load users
-	users, err := r.loadWalletUsers(id)
+	users, err := r.loadWalletUsers(ctx, id)
 	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 	wallet.Users = users
 
 	// Load transactions
-	transactions, err := r.loadWalletTransactions(id)
+	transactions, err := r.loadWalletTransactions(ctx, id)
 	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 	wallet.Transactions = transactions
 
+	span.SetStatus(codes.Ok, "Wallet found")
 	return &wallet, nil
 }
 
 func (r *PostgreSQLWalletRepository) FindByUserId(ctx context.Context, userId string) ([]models.Wallet, error) {
+	ctx, span := r.tracer.Start(ctx, "PostgreSQLWalletRepository.FindByUserId")
+	defer span.End()
+
 	query := `SELECT DISTINCT w.id, w.creator_id, w.name, w.balance_value, w.balance_offset, w.created_at, w.updated_at 
 			  FROM wallets w 
 			  JOIN wallet_users wu ON w.id = wu.wallet_id 
 			  WHERE wu.user_id = $1`
 
-	rows, err := r.db.Query(query, userId)
+	rows, err := r.db.QueryContext(ctx, query, userId)
 	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 	defer rows.Close()
@@ -95,6 +113,7 @@ func (r *PostgreSQLWalletRepository) FindByUserId(ctx context.Context, userId st
 		)
 
 		if err != nil {
+			span.SetStatus(codes.Error, err.Error())
 			return nil, err
 		}
 
@@ -105,12 +124,17 @@ func (r *PostgreSQLWalletRepository) FindByUserId(ctx context.Context, userId st
 		wallets = append(wallets, wallet)
 	}
 
+	span.SetStatus(codes.Ok, "Wallets found")
 	return wallets, nil
 }
 
 func (r *PostgreSQLWalletRepository) Save(ctx context.Context, wallet *models.Wallet) error {
+	ctx, span := r.tracer.Start(ctx, "PostgreSQLWalletRepository.Save")
+	defer span.End()
+
 	tx, err := r.db.Begin()
 	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
 		return err
 	}
 	defer tx.Rollback()
@@ -125,7 +149,7 @@ func (r *PostgreSQLWalletRepository) Save(ctx context.Context, wallet *models.Wa
 			  updated_at = $8`
 
 	now := time.Now()
-	_, err = tx.Exec(query,
+	_, err = tx.ExecContext(ctx, query,
 		wallet.Id,
 		wallet.CreatorId,
 		wallet.Name,
@@ -137,18 +161,20 @@ func (r *PostgreSQLWalletRepository) Save(ctx context.Context, wallet *models.Wa
 	)
 
 	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
 		return err
 	}
 
 	// Sync wallet users
-	err = r.syncWalletUsers(tx, wallet.Id, wallet.Users)
+	err = r.syncWalletUsers(ctx, tx, wallet.Id, wallet.Users)
 	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
 		return err
 	}
 
 	// Save transactions
 	for _, transaction := range wallet.Transactions {
-		_, err = tx.Exec(`INSERT INTO transactions (id, wallet_id, amount_value, amount_offset, created_by, type, description, created_at)
+		_, err = tx.ExecContext(ctx, `INSERT INTO transactions (id, wallet_id, amount_value, amount_offset, created_by, type, description, created_at)
 						  VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 						  ON CONFLICT (id) DO NOTHING`,
 			transaction.Id,
@@ -161,12 +187,14 @@ func (r *PostgreSQLWalletRepository) Save(ctx context.Context, wallet *models.Wa
 			transaction.CreatedAt,
 		)
 		if err != nil {
+			span.SetStatus(codes.Error, err.Error())
 			return err
 		}
 	}
 
 	err = tx.Commit()
 	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
 		return err
 	}
 
@@ -175,16 +203,17 @@ func (r *PostgreSQLWalletRepository) Save(ctx context.Context, wallet *models.Wa
 	}
 	wallet.ClearEvents()
 
+	span.SetStatus(codes.Ok, "Wallet saved")
 	return err
 }
 
-func (r *PostgreSQLWalletRepository) loadWalletUsers(walletId string) ([]models.User, error) {
+func (r *PostgreSQLWalletRepository) loadWalletUsers(ctx context.Context, walletId string) ([]models.User, error) {
 	query := `SELECT u.id, u.first_name, u.last_name, u.email, u.hashed_password, u.created_at, u.updated_at
 			  FROM users u
 			  JOIN wallet_users wu ON u.id = wu.user_id
 			  WHERE wu.wallet_id = $1`
 
-	rows, err := r.db.Query(query, walletId)
+	rows, err := r.db.QueryContext(ctx, query, walletId)
 	if err != nil {
 		return nil, err
 	}
@@ -220,14 +249,14 @@ func (r *PostgreSQLWalletRepository) loadWalletUsers(walletId string) ([]models.
 	return users, nil
 }
 
-func (r *PostgreSQLWalletRepository) loadWalletTransactions(walletId string) ([]models.Transaction, error) {
+func (r *PostgreSQLWalletRepository) loadWalletTransactions(ctx context.Context, walletId string) ([]models.Transaction, error) {
 	query := `SELECT t.id, t.amount_value, t.amount_offset, t.type, t.description, t.created_at,
                     u.id as user_id, u.first_name, u.last_name, u.email
 			  FROM transactions t
 			  JOIN users u ON t.created_by = u.id 
 			  WHERE t.wallet_id = $1
 			  ORDER BY t.created_at DESC`
-	rows, err := r.db.Query(query, walletId)
+	rows, err := r.db.QueryContext(ctx, query, walletId)
 	if err != nil {
 		return nil, err
 	}
@@ -263,9 +292,9 @@ func (r *PostgreSQLWalletRepository) loadWalletTransactions(walletId string) ([]
 	return transactions, nil
 }
 
-func (r *PostgreSQLWalletRepository) syncWalletUsers(tx *sql.Tx, walletId string, users []models.User) error {
+func (r *PostgreSQLWalletRepository) syncWalletUsers(ctx context.Context, tx *sql.Tx, walletId string, users []models.User) error {
 	// Get current user IDs
-	rows, err := tx.Query("SELECT user_id FROM wallet_users WHERE wallet_id = $1", walletId)
+	rows, err := tx.QueryContext(ctx, "SELECT user_id FROM wallet_users WHERE wallet_id = $1", walletId)
 	if err != nil {
 		return err
 	}
@@ -289,7 +318,7 @@ func (r *PostgreSQLWalletRepository) syncWalletUsers(tx *sql.Tx, walletId string
 	// Remove users not in new set
 	for userId := range currentUsers {
 		if !newUsers[userId] {
-			_, err = tx.Exec("DELETE FROM wallet_users WHERE wallet_id = $1 AND user_id = $2", walletId, userId)
+			_, err = tx.ExecContext(ctx, "DELETE FROM wallet_users WHERE wallet_id = $1 AND user_id = $2", walletId, userId)
 			if err != nil {
 				return err
 			}
@@ -299,7 +328,7 @@ func (r *PostgreSQLWalletRepository) syncWalletUsers(tx *sql.Tx, walletId string
 	// Add new users
 	for userId := range newUsers {
 		if !currentUsers[userId] {
-			_, err = tx.Exec("INSERT INTO wallet_users (wallet_id, user_id, assigned_at) VALUES ($1, $2, $3)", walletId, userId, time.Now())
+			_, err = tx.ExecContext(ctx, "INSERT INTO wallet_users (wallet_id, user_id, assigned_at) VALUES ($1, $2, $3)", walletId, userId, time.Now())
 			if err != nil {
 				return err
 			}

@@ -3,17 +3,32 @@ package database
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"log/slog"
 
+	"github.com/exaring/otelpgx"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/stdlib"
+	"go.opentelemetry.io/otel"
 )
 
 // initialize a SQL client for postgresql
 func NewPostgresClient(ctx context.Context, dbConnectionUrl string) (*sql.DB, error) {
-	db, err := sql.Open("pgx", dbConnectionUrl)
+	cfg, err := pgxpool.ParseConfig(dbConnectionUrl)
+	if err != nil {
+		err = fmt.Errorf("create connection pool: %w", err)
+		slog.Error("failed to create connection pool", slog.String("error", err.Error()))
+		return nil, err
+	}
+
+	cfg.ConnConfig.Tracer = otelpgx.NewTracer(otelpgx.WithTracerProvider(otel.GetTracerProvider()))
+
+	pool, err := pgxpool.NewWithConfig(ctx, cfg)
+
+	db := stdlib.OpenDBFromPool(pool)
 	if err != nil {
 		slog.Error("failed to connect to database", slog.String("error", err.Error()))
 		return nil, err
