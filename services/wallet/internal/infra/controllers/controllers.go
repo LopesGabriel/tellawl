@@ -8,7 +8,10 @@ import (
 
 	"github.com/gorilla/mux"
 	usecases "github.com/lopesgabriel/tellawl/services/wallet/internal/use-cases"
+	"go.opentelemetry.io/otel"
 )
+
+var tracer = otel.Tracer("mux-server")
 
 type APIHandler struct {
 	usecases *usecases.UseCase

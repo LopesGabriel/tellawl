@@ -9,11 +9,12 @@ import (
 )
 
 type Configuration struct {
-	JwtSecret    string
-	Version      string
-	Port         int
-	DatabaseUrl  string
-	MigrationUrl string
+	JwtSecret        string
+	Version          string
+	Port             int
+	DatabaseUrl      string
+	MigrationUrl     string
+	OTELCollectorUrl string
 }
 
 func InitAppConfigurations() *Configuration {
@@ -33,10 +34,11 @@ func InitAppConfigurations() *Configuration {
 	}
 
 	return &Configuration{
-		JwtSecret:    os.Getenv("JWT_SECRET"),
-		Version:      os.Getenv("VERSION"),
-		Port:         port,
-		DatabaseUrl:  os.Getenv("POSTGRESQL_URL"),
-		MigrationUrl: os.Getenv("MIGRATIONS_URL"),
+		JwtSecret:        os.Getenv("JWT_SECRET"),
+		Version:          os.Getenv("VERSION"),
+		Port:             port,
+		DatabaseUrl:      os.Getenv("POSTGRESQL_URL"),
+		MigrationUrl:     os.Getenv("MIGRATIONS_URL"),
+		OTELCollectorUrl: os.Getenv("OTEL_COLLECTOR_URL"),
 	}
 }

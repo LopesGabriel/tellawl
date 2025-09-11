@@ -11,14 +11,20 @@ import (
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/controllers"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/database"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/events"
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/telemetry"
 	usecases "github.com/lopesgabriel/tellawl/services/wallet/internal/use-cases"
 )
 
 func main() {
+	ctx := context.Background()
 	slog.SetLogLoggerLevel(slog.LevelDebug)
 	slog.Info("Starting Wallet Service")
 
 	appConfig := core.InitAppConfigurations()
+
+	slog.Info("Starting telemetry service")
+	shutdown := telemetry.InitTelemetry(ctx, appConfig)
+	defer shutdown()
 
 	slog.Info("Starting database interface")
 	db, err := database.NewPostgresClient(context.Background(), appConfig.DatabaseUrl)

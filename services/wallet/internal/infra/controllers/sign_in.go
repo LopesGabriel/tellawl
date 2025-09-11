@@ -14,8 +14,8 @@ type signInRequest struct {
 }
 
 func (handler *APIHandler) HandleSignIn(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Server-Version", handler.version)
-	w.Header().Add("Content-Type", "application/json")
+	ctx, span := tracer.Start(r.Context(), "HandleSignIn")
+	defer span.End()
 
 	var data signInRequest
 	// Read the requst body
@@ -29,7 +29,7 @@ func (handler *APIHandler) HandleSignIn(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	token, err := handler.usecases.AuthenticateUser(r.Context(), usecases.AuthenticateUserUseCaseInput{
+	token, err := handler.usecases.AuthenticateUser(ctx, usecases.AuthenticateUserUseCaseInput{
 		Email:    data.Email,
 		Password: data.Password,
 	})
@@ -60,6 +60,7 @@ func (handler *APIHandler) HandleSignIn(w http.ResponseWriter, r *http.Request) 
 		"token": token,
 	})
 
+	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(result)
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/controllers/presenter"
 	usecases "github.com/lopesgabriel/tellawl/services/wallet/internal/use-cases"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 type registerTransactionRequest struct {
@@ -18,8 +19,8 @@ type registerTransactionRequest struct {
 }
 
 func (handler *APIHandler) HandleRegisterTransaction(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Server-Version", handler.version)
-	w.Header().Add("Content-Type", "application/json")
+	ctx, span := tracer.Start(r.Context(), "HandleRegisterTransaction")
+	defer span.End()
 
 	claims := r.Context().Value(userContextKey).(jwt.MapClaims)
 	creatorId, err := claims.GetSubject()
@@ -52,7 +53,11 @@ func (handler *APIHandler) HandleRegisterTransaction(w http.ResponseWriter, r *h
 		return
 	}
 
-	transaction, err := handler.usecases.RegisterTransaction(r.Context(), usecases.RegisterTransactionUseCaseInput{
+	span.SetAttributes(
+		attribute.String("wallet_id", walletId),
+		attribute.String("user_id", creatorId),
+	)
+	transaction, err := handler.usecases.RegisterTransaction(ctx, usecases.RegisterTransactionUseCaseInput{
 		TransactionRegisteredByUserId: creatorId,
 		WalletId:                      walletId,
 		Amount:                        data.Amount,
@@ -71,6 +76,7 @@ func (handler *APIHandler) HandleRegisterTransaction(w http.ResponseWriter, r *h
 
 	httpTransaction := presenter.NewHTTPTransaction(*transaction)
 
+	w.Header().Add("Content-Type", "application/json")
 	w.Header().Add("Location", "/wallets/"+walletId+"/transactions/"+transaction.Id)
 	w.WriteHeader(http.StatusCreated)
 	w.Write(httpTransaction.ToJSON())

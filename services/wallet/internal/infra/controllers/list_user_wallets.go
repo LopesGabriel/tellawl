@@ -7,11 +7,12 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/controllers/presenter"
 	usecases "github.com/lopesgabriel/tellawl/services/wallet/internal/use-cases"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 func (handler *APIHandler) HandleListUserWallets(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Server-Version", handler.version)
-	w.Header().Add("Content-Type", "application/json")
+	ctx, span := tracer.Start(r.Context(), "HandleListUserWallets")
+	defer span.End()
 
 	claims := r.Context().Value(userContextKey).(jwt.MapClaims)
 	userId, err := claims.GetSubject()
@@ -23,7 +24,8 @@ func (handler *APIHandler) HandleListUserWallets(w http.ResponseWriter, r *http.
 		return
 	}
 
-	wallets, err := handler.usecases.ListUserWallets(r.Context(), usecases.ListUserWalletsUseCaseInput{
+	span.SetAttributes(attribute.String("user_id", userId))
+	wallets, err := handler.usecases.ListUserWallets(ctx, usecases.ListUserWalletsUseCaseInput{
 		UserId: userId,
 	})
 
@@ -41,6 +43,7 @@ func (handler *APIHandler) HandleListUserWallets(w http.ResponseWriter, r *http.
 	}
 
 	jsonData, _ := json.Marshal(httpWallets)
+	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonData)
 }

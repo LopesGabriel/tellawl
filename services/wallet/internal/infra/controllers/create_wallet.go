@@ -14,8 +14,8 @@ type createWalletRequest struct {
 }
 
 func (handler *APIHandler) HandleCreateWallet(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Server-Version", handler.version)
-	w.Header().Add("Content-Type", "application/json")
+	ctx, span := tracer.Start(r.Context(), "HandleCreateWallet")
+	defer span.End()
 
 	claims := r.Context().Value(userContextKey).(jwt.MapClaims)
 	creatorId, err := claims.GetSubject()
@@ -39,7 +39,7 @@ func (handler *APIHandler) HandleCreateWallet(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	wallet, err := handler.usecases.CreateWallet(r.Context(), usecases.CreateWalletUseCaseInput{
+	wallet, err := handler.usecases.CreateWallet(ctx, usecases.CreateWalletUseCaseInput{
 		CreatorID: creatorId,
 		Name:      data.WalletName,
 	})
@@ -54,6 +54,7 @@ func (handler *APIHandler) HandleCreateWallet(w http.ResponseWriter, r *http.Req
 
 	httpWallet := presenter.NewHTTPWallet(*wallet)
 
+	w.Header().Add("Content-Type", "application/json")
 	w.Header().Add("Location", "/wallets/"+wallet.Id)
 	w.WriteHeader(http.StatusCreated)
 	w.Write(httpWallet.ToJSON())

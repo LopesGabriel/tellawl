@@ -6,3 +6,9 @@ services:
       POSTGRES_DB: wallet
     ports:
       - 54321:5432
+
+  otel-lgtm:
+    image: grafana/otel-lgtm
+    ports:
+      - 3000:3000
+      - 4317:4317

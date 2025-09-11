@@ -16,8 +16,8 @@ type signUpRequest struct {
 }
 
 func (handler *APIHandler) HandleSignUp(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Server-Version", handler.version)
-	w.Header().Add("Content-Type", "application/json")
+	ctx, span := tracer.Start(r.Context(), "HandleSignUp")
+	defer span.End()
 
 	var data signUpRequest
 	// Read the requst body
@@ -31,7 +31,7 @@ func (handler *APIHandler) HandleSignUp(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	user, err := handler.usecases.CreateUser(r.Context(), usecases.CreateUserUseCaseInput{
+	user, err := handler.usecases.CreateUser(ctx, usecases.CreateUserUseCaseInput{
 		FirstName: data.FirstName,
 		LastName:  data.LastName,
 		Email:     data.Email,
@@ -48,7 +48,7 @@ func (handler *APIHandler) HandleSignUp(w http.ResponseWriter, r *http.Request) 
 
 	httpUser := presenter.NewHTTPUser(*user)
 
-	token, err := handler.usecases.AuthenticateUser(r.Context(), usecases.AuthenticateUserUseCaseInput{
+	token, err := handler.usecases.AuthenticateUser(ctx, usecases.AuthenticateUserUseCaseInput{
 		Email:    data.Email,
 		Password: data.Password,
 	})
@@ -60,6 +60,7 @@ func (handler *APIHandler) HandleSignUp(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	w.Header().Add("Content-Type", "application/json")
 	w.Header().Add("Location", "/users/"+httpUser.Id)
 	w.Header().Add("token", token)
 	w.WriteHeader(http.StatusCreated)

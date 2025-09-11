@@ -2,7 +2,7 @@
 @port = 8080
 @host = {{hostname}}:{{port}}
 @contentType = application/json
-@jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTcxOTExNTIsImlzcyI6ImNvbS50ZWxsYXcuYmFuayIsInN1YiI6IjhkMzc2NmJiLTZjMWEtNGVkMi1hM2I3LTI0NTc0M2NhZjFhYSJ9.-uI900V1_TuSNkPZSPFpUDjOF0WseL6-006CbUOYI-Q
+@jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTc1NjI2NjUsImlzcyI6ImNvbS50ZWxsYXcuYmFuayIsInN1YiI6Ijg4OTUyOGZiLWY0YWEtNDE1MS05YjRmLWM0ODM4NjQ1MDJjNSJ9.jf44HluvskgI2QQ4ptpiU9ED6TUXwXjdivtkvSveW98
 @walletId = 09e4f61a-955c-449b-a7c5-14ed243e7fe2
 
 ###

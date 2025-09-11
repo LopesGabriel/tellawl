@@ -16,8 +16,8 @@ type shareWalletRequest struct {
 }
 
 func (handler *APIHandler) HandleShareWallet(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Server-Version", handler.version)
-	w.Header().Add("Content-Type", "application/json")
+	ctx, span := tracer.Start(r.Context(), "HandleShareWallet")
+	defer span.End()
 
 	claims := r.Context().Value(userContextKey).(jwt.MapClaims)
 	creatorId, err := claims.GetSubject()
@@ -50,7 +50,7 @@ func (handler *APIHandler) HandleShareWallet(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	wallet, err := handler.usecases.ShareWallet(r.Context(), usecases.ShareWalletUseCaseInput{
+	wallet, err := handler.usecases.ShareWallet(ctx, usecases.ShareWalletUseCaseInput{
 		WalletCreatorId: creatorId,
 		WalletId:        walletId,
 		SharedUserEmail: data.UserEmail,
@@ -73,6 +73,7 @@ func (handler *APIHandler) HandleShareWallet(w http.ResponseWriter, r *http.Requ
 
 	httpWallet := presenter.NewHTTPWallet(*wallet)
 
+	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(httpWallet.ToJSON())
 }
