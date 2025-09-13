@@ -71,7 +71,7 @@ Content-Type: {{contentType}}
 Authorization: Bearer {{jwtToken}}
 
 {
-  "amount": 14000,
-  "transaction_type": "deposit",
-  "description": "Academia Indi"
+  "amount": 8040,
+  "transaction_type": "withdraw",
+  "description": "Pizza Grande com Refri"
 }
