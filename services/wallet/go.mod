@@ -1,6 +1,10 @@
 module github.com/lopesgabriel/tellawl/services/wallet
 
-go 1.24.4
+go 1.25.1
+
+replace github.com/lopesgabriel/tellawl/packages/logger => ../../packages/logger
+
+replace github.com/lopesgabriel/tellawl/packages/tracing => ../../packages/tracing
 
 require (
 	github.com/gorilla/mux v1.8.1
@@ -8,16 +12,20 @@ require (
 )
 
 require (
+	github.com/exaring/otelpgx v0.9.3
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/golang-migrate/migrate/v4 v4.19.0
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.4
 	github.com/joho/godotenv v1.5.1
+	github.com/lopesgabriel/tellawl/packages/logger v0.0.0-00010101000000-000000000000
+	github.com/lopesgabriel/tellawl/packages/tracing v0.0.0-00010101000000-000000000000
+	go.opentelemetry.io/otel v1.38.0
+	go.opentelemetry.io/otel/trace v1.38.0
 )
 
 require (
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
-	github.com/exaring/otelpgx v0.9.3 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.2 // indirect
@@ -28,12 +36,14 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/lib/pq v1.10.9 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
-	go.opentelemetry.io/otel v1.38.0 // indirect
+	go.opentelemetry.io/contrib/bridges/otelslog v0.13.0 // indirect
+	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc v0.14.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.38.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.38.0 // indirect
+	go.opentelemetry.io/otel/log v0.14.0 // indirect
 	go.opentelemetry.io/otel/metric v1.38.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.38.0 // indirect
-	go.opentelemetry.io/otel/trace v1.38.0 // indirect
+	go.opentelemetry.io/otel/sdk/log v0.14.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.7.1 // indirect
 	golang.org/x/net v0.43.0 // indirect
 	golang.org/x/sync v0.16.0 // indirect

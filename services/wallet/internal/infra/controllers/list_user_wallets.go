@@ -2,21 +2,24 @@ package controllers
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/lopesgabriel/tellawl/packages/logger"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/controllers/presenter"
 	usecases "github.com/lopesgabriel/tellawl/services/wallet/internal/use-cases"
 	"go.opentelemetry.io/otel/attribute"
 )
 
 func (handler *APIHandler) HandleListUserWallets(w http.ResponseWriter, r *http.Request) {
-	ctx, span := tracer.Start(r.Context(), "HandleListUserWallets")
+	ctx, span := handler.tracer.Start(r.Context(), "HandleListUserWallets")
 	defer span.End()
 
 	claims := r.Context().Value(userContextKey).(jwt.MapClaims)
 	userId, err := claims.GetSubject()
 	if err != nil {
+		logger.Error(ctx, "Could not get token subject", slog.String("error", err.Error()))
 		WriteError(w, http.StatusInternalServerError, map[string]any{
 			"message": "Could not get token subject",
 			"error":   err.Error(),
@@ -28,8 +31,8 @@ func (handler *APIHandler) HandleListUserWallets(w http.ResponseWriter, r *http.
 	wallets, err := handler.usecases.ListUserWallets(ctx, usecases.ListUserWalletsUseCaseInput{
 		UserId: userId,
 	})
-
 	if err != nil {
+		logger.Error(ctx, "Could not list user wallets", slog.String("error", err.Error()))
 		WriteError(w, http.StatusInternalServerError, map[string]any{
 			"message": "Could not list user wallets",
 			"error":   err.Error(),

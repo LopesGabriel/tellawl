@@ -3,6 +3,7 @@ package usecases
 import (
 	"context"
 
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/errx"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/models"
 )
 
@@ -21,7 +22,7 @@ func (usecase *UseCase) RegisterTransaction(ctx context.Context, input RegisterT
 	}
 
 	if models.TransactionType(input.TransactionType) != models.TransactionTypeDeposit && models.TransactionType(input.TransactionType) != models.TransactionTypeWithdraw {
-		return nil, ErrInvalidTransactionType
+		return nil, errx.ErrInvalidTransactionType
 	}
 
 	user, err := usecase.repos.User.FindByID(ctx, input.TransactionRegisteredByUserId)
@@ -42,7 +43,7 @@ func (usecase *UseCase) RegisterTransaction(ctx context.Context, input RegisterT
 	)
 	if err != nil {
 		if err.Error() == "user is not allowed to register transactions" {
-			return nil, ErrInsufficientPermissions
+			return nil, errx.ErrInsufficientPermissions
 		}
 
 		return nil, err

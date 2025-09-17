@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/errx"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/models"
 )
 
@@ -14,11 +15,11 @@ type CreateWalletUseCaseInput struct {
 
 func (usecase *UseCase) CreateWallet(ctx context.Context, input CreateWalletUseCaseInput) (*models.Wallet, error) {
 	if input.CreatorID == "" {
-		return nil, MissingRequiredFieldsError("CreatorID")
+		return nil, errx.MissingRequiredFieldsError("CreatorID")
 	}
 
 	if input.Name == "" {
-		return nil, MissingRequiredFieldsError("Name")
+		return nil, errx.MissingRequiredFieldsError("Name")
 	}
 
 	creator, err := usecase.repos.User.FindByID(ctx, input.CreatorID)

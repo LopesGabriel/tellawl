@@ -2,11 +2,13 @@ package controllers
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 	"os"
 	"strings"
 
 	jwt "github.com/golang-jwt/jwt/v5"
+	"github.com/lopesgabriel/tellawl/packages/logger"
 )
 
 type contextKey string
@@ -19,6 +21,7 @@ func jwtAuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
+			logger.Error(r.Context(), "missing authorization header", slog.String("error", "Authorization Header not available"))
 			WriteError(w, http.StatusUnauthorized, map[string]any{
 				"message": "Missing Authorization header",
 			})
@@ -28,6 +31,7 @@ func jwtAuthMiddleware(next http.Handler) http.Handler {
 		// Expect header in form: "Bearer <token>"
 		parts := strings.SplitN(authHeader, " ", 2)
 		if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
+			logger.Error(r.Context(), "Invalid Authorization header value", slog.String("error", "expected token in 'Bearer <token>' format"))
 			WriteError(w, http.StatusUnauthorized, map[string]any{
 				"message": "Invalid Authorization header format",
 			})
@@ -46,6 +50,7 @@ func jwtAuthMiddleware(next http.Handler) http.Handler {
 		})
 
 		if err != nil || !token.Valid {
+			logger.Error(r.Context(), "Invalid token", slog.String("error", err.Error()))
 			WriteError(w, http.StatusUnauthorized, map[string]any{
 				"message": "Invalid token",
 			})
@@ -59,6 +64,7 @@ func jwtAuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
+		logger.Error(r.Context(), "Invalid token claims")
 		WriteError(w, http.StatusUnauthorized, map[string]any{
 			"message": "Invalid token claims",
 		})

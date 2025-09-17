@@ -7,21 +7,23 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/lopesgabriel/tellawl/packages/logger"
+	"github.com/lopesgabriel/tellawl/packages/tracing"
 	usecases "github.com/lopesgabriel/tellawl/services/wallet/internal/use-cases"
-	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 )
-
-var tracer = otel.Tracer("mux-server")
 
 type APIHandler struct {
 	usecases *usecases.UseCase
 	version  string
+	tracer   trace.Tracer
 }
 
 func NewAPIHandler(usecases *usecases.UseCase, version string) *APIHandler {
 	return &APIHandler{
 		usecases: usecases,
 		version:  version,
+		tracer:   tracing.GetTracer("wallet"),
 	}
 }
 
@@ -66,8 +68,7 @@ func WriteError(w http.ResponseWriter, statusCode int, payload map[string]any) {
 func (handler *APIHandler) requestInterceptorMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("X-Server-Version", handler.version)
-		slog.Debug(
-			"Received new request",
+		logger.Debug(r.Context(), "processing new request",
 			slog.String("method", r.Method),
 			slog.String("path", r.URL.Path),
 		)

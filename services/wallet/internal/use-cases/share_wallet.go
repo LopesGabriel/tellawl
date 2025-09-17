@@ -3,6 +3,7 @@ package usecases
 import (
 	"context"
 
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/errx"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/models"
 )
 
@@ -24,7 +25,7 @@ func (usecase *UseCase) ShareWallet(ctx context.Context, input ShareWalletUseCas
 	}
 
 	if wallet.CreatorId != creatorUser.Id {
-		return nil, ErrInsufficientPermissions
+		return nil, errx.ErrInsufficientPermissions
 	}
 
 	sharedUser, err := usecase.repos.User.FindByEmail(ctx, input.SharedUserEmail)

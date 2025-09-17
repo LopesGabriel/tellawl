@@ -16,6 +16,10 @@ func main() {
 	defer shutdown()
 
 	logger.Info(ctx, "Starting member service", slog.String("example", "Example Value"))
+	logger.Debug(ctx, "Debugging member service", slog.String("example", "Example Value"))
+	logger.Warn(ctx, "Warning member service", slog.String("example", "Example Value"))
+	logger.Error(ctx, "Error member service", slog.String("example", "Example Value"))
+	<-ctx.Done()
 }
 
 func initTelemetry(ctx context.Context) (func() error, error) {

@@ -3,6 +3,7 @@ package usecases_test
 import (
 	"testing"
 
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/errx"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/models"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/repository"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/events"
@@ -125,7 +126,7 @@ func TestRegisterTransactionUseCase(t *testing.T) {
 			Description:                   "Unauthorized attempt",
 		})
 
-		if err != usecases.ErrInsufficientPermissions {
+		if err != errx.ErrInsufficientPermissions {
 			t.Errorf("Expected insufficient permissions error, got %v", err)
 		}
 

@@ -3,8 +3,8 @@ package usecases
 import (
 	"context"
 	"errors"
-	"strings"
 
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/errx"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/models"
 )
 
@@ -17,25 +17,25 @@ type CreateUserUseCaseInput struct {
 
 func (usecase *UseCase) CreateUser(ctx context.Context, input CreateUserUseCaseInput) (*models.User, error) {
 	if input.FirstName == "" {
-		return nil, MissingRequiredFieldsError("FirstName")
+		return nil, errx.MissingRequiredFieldsError("FirstName")
 	}
 
 	if input.LastName == "" {
-		return nil, MissingRequiredFieldsError("LastName")
+		return nil, errx.MissingRequiredFieldsError("LastName")
 	}
 
 	if input.Email == "" {
-		return nil, MissingRequiredFieldsError("Email")
+		return nil, errx.MissingRequiredFieldsError("Email")
 	}
 
 	if input.Password == "" {
-		return nil, MissingRequiredFieldsError("Password")
+		return nil, errx.MissingRequiredFieldsError("Password")
 	}
 
 	existingUser, err := usecase.repos.User.FindByEmail(ctx, input.Email)
 	if err != nil {
-		if !strings.Contains(err.Error(), "user not found") && !strings.Contains(err.Error(), "no rows in result set") {
-			return nil, errors.Join(errors.New("could not validate existing user"), err)
+		if err != errx.ErrNotFound {
+			return nil, err
 		}
 	}
 

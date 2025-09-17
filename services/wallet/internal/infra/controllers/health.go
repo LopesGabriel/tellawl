@@ -6,7 +6,7 @@ import (
 )
 
 func (handler *APIHandler) HandleHealthCheck(w http.ResponseWriter, r *http.Request) {
-	_, span := tracer.Start(r.Context(), "HandleHealthCheck")
+	_, span := handler.tracer.Start(r.Context(), "HandleHealthCheck")
 	defer span.End()
 
 	result, _ := json.Marshal(map[string]string{

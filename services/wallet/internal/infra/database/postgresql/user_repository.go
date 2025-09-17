@@ -6,9 +6,11 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/lopesgabriel/tellawl/packages/tracing"
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/errx"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/models"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/ports"
-	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -20,12 +22,10 @@ type PostgreSQLUserRepository struct {
 }
 
 func NewPostgreSQLUserRepository(db *sql.DB, publisher ports.EventPublisher) *PostgreSQLUserRepository {
-	tracer := otel.Tracer("postgres-user-repository")
-
 	return &PostgreSQLUserRepository{
 		db:        db,
 		publisher: publisher,
-		tracer:    tracer,
+		tracer:    tracing.GetTracer("wallet"),
 	}
 }
 
@@ -87,6 +87,14 @@ func (r *PostgreSQLUserRepository) FindByEmail(ctx context.Context, email string
 	)
 
 	if err != nil {
+		if err == sql.ErrNoRows {
+			span.AddEvent("user_not_found", trace.WithAttributes(
+				attribute.KeyValue{Key: "email", Value: attribute.StringValue(email)},
+			))
+			span.SetStatus(codes.Ok, "User not found")
+			return nil, errx.ErrNotFound
+		}
+
 		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}

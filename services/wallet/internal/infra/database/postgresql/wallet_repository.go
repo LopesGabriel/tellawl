@@ -6,9 +6,9 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/lopesgabriel/tellawl/packages/tracing"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/models"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/ports"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -20,12 +20,10 @@ type PostgreSQLWalletRepository struct {
 }
 
 func NewPostgreSQLWalletRepository(db *sql.DB, publisher ports.EventPublisher) *PostgreSQLWalletRepository {
-	tracer := otel.Tracer("postgres-wallet-repository")
-
 	return &PostgreSQLWalletRepository{
 		db:        db,
 		publisher: publisher,
-		tracer:    tracer,
+		tracer:    tracing.GetTracer("wallet"),
 	}
 }
 
@@ -129,7 +127,7 @@ func (r *PostgreSQLWalletRepository) FindByUserId(ctx context.Context, userId st
 }
 
 func (r *PostgreSQLWalletRepository) Save(ctx context.Context, wallet *models.Wallet) error {
-	ctx, span := r.tracer.Start(ctx, "PostgreSQLWalletRepository.Save")
+	ctx, span := tracing.Tracer.Start(ctx, "PostgreSQLWalletRepository.Save")
 	defer span.End()
 
 	tx, err := r.db.Begin()

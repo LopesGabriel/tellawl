@@ -2,8 +2,10 @@ package controllers
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 
+	"github.com/lopesgabriel/tellawl/packages/logger"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/controllers/presenter"
 	usecases "github.com/lopesgabriel/tellawl/services/wallet/internal/use-cases"
 )
@@ -16,7 +18,7 @@ type signUpRequest struct {
 }
 
 func (handler *APIHandler) HandleSignUp(w http.ResponseWriter, r *http.Request) {
-	ctx, span := tracer.Start(r.Context(), "HandleSignUp")
+	ctx, span := handler.tracer.Start(r.Context(), "HandleSignUp")
 	defer span.End()
 
 	var data signUpRequest
@@ -24,6 +26,7 @@ func (handler *APIHandler) HandleSignUp(w http.ResponseWriter, r *http.Request) 
 	err := json.NewDecoder(r.Body).Decode(&data)
 	defer r.Body.Close()
 	if err != nil {
+		logger.Error(ctx, "Could not decode the request body", slog.String("error", err.Error()))
 		WriteError(w, http.StatusBadRequest, map[string]any{
 			"message": "Could not parse the request body, are you sending a JSON?",
 			"error":   err.Error(),
@@ -37,8 +40,8 @@ func (handler *APIHandler) HandleSignUp(w http.ResponseWriter, r *http.Request) 
 		Email:     data.Email,
 		Password:  data.Password,
 	})
-
 	if err != nil {
+		logger.Error(ctx, "Could not sign up", slog.String("error", err.Error()))
 		WriteError(w, http.StatusBadRequest, map[string]any{
 			"message": "Could not sign up",
 			"error":   err.Error(),
@@ -53,6 +56,7 @@ func (handler *APIHandler) HandleSignUp(w http.ResponseWriter, r *http.Request) 
 		Password: data.Password,
 	})
 	if err != nil {
+		logger.Error(ctx, "Could not generate the token for a new user", slog.String("error", err.Error()))
 		WriteError(w, http.StatusInternalServerError, map[string]any{
 			"message": "Could not generate the token",
 			"error":   err.Error(),

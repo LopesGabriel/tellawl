@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/errx"
 )
 
 type AuthenticateUserUseCaseInput struct {
@@ -14,7 +15,7 @@ type AuthenticateUserUseCaseInput struct {
 
 func (usecase *UseCase) AuthenticateUser(ctx context.Context, input AuthenticateUserUseCaseInput) (string, error) {
 	if input.Email == "" || input.Password == "" {
-		return "", ErrInvalidInput
+		return "", errx.ErrInvalidInput
 	}
 
 	user, err := usecase.repos.User.FindByEmail(ctx, input.Email)
@@ -23,7 +24,7 @@ func (usecase *UseCase) AuthenticateUser(ctx context.Context, input Authenticate
 	}
 
 	if !user.ValidatePassword(input.Password) {
-		return "", ErrInvalidCredentials
+		return "", errx.ErrInvalidCredentials
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{

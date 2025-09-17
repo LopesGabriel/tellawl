@@ -6,41 +6,42 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/lopesgabriel/tellawl/packages/logger"
+	"github.com/lopesgabriel/tellawl/packages/tracing"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/core"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/repository"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/controllers"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/database"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/events"
-	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/telemetry"
 	usecases "github.com/lopesgabriel/tellawl/services/wallet/internal/use-cases"
+	"go.opentelemetry.io/otel"
 )
 
 func main() {
 	ctx := context.Background()
-	slog.SetLogLoggerLevel(slog.LevelDebug)
-	slog.Info("Starting Wallet Service")
-
 	appConfig := core.InitAppConfigurations()
 
-	slog.Info("Starting telemetry service")
-	shutdown := telemetry.InitTelemetry(ctx, appConfig)
+	shutdown, err := initTelemetry(ctx, appConfig)
+	if err != nil {
+		fmt.Printf("failed to start telemetry: %v", err)
+		panic(err)
+	}
 	defer shutdown()
+	logger.Info(ctx, "Telemetry started")
 
-	slog.Info("Starting database interface")
 	db, err := database.NewPostgresClient(context.Background(), appConfig.DatabaseUrl)
 	if err != nil {
-		panic(err)
+		logger.Fatal(ctx, "failed to create the postgres client", slog.String("error", err.Error()))
 	}
-
 	err = db.Ping()
 	if err != nil {
-		panic(err)
+		logger.Fatal(ctx, "failed to ping database", slog.String("error", err.Error()))
 	}
-	slog.Info("Successfully connected to database")
+	logger.Info(ctx, "Database connected")
 
 	err = database.MigrateUp(appConfig.MigrationUrl, appConfig.DatabaseUrl)
 	if err != nil {
-		panic(err)
+		logger.Fatal(ctx, "failed to apply database migration", slog.String("error", err.Error()))
 	}
 
 	publisher := events.InMemoryEventPublisher{}
@@ -52,9 +53,40 @@ func main() {
 	})
 	apiHandler := controllers.NewAPIHandler(useCases, appConfig.Version)
 
-	slog.Info(
-		fmt.Sprintf("API Server listenig on port %d", appConfig.Port),
-		slog.String("version", appConfig.Version),
-	)
+	logger.Info(ctx, "Starting the API Server", slog.Int("port", appConfig.Port))
 	apiHandler.Listen(appConfig.Port)
+}
+
+func initTelemetry(ctx context.Context, appConfig *core.Configuration) (func() error, error) {
+	logProvider, err := logger.Init(ctx, logger.InitLoggerArgs{
+		CollectorURL:     appConfig.OTELCollectorUrl,
+		ServiceName:      "wallet",
+		ServiceNamespace: "tellawl",
+		ServiceVersion:   appConfig.Version,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	tracerProvider, err := tracing.Init(ctx, tracing.NewTraceProviderArgs{
+		CollectorURL:     appConfig.OTELCollectorUrl,
+		ServiceName:      "wallet",
+		ServiceNamespace: "tellawl",
+		ServiceVersion:   appConfig.Version,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	otel.SetTracerProvider(tracerProvider)
+
+	return func() error {
+		if err := logProvider.Shutdown(ctx); err != nil {
+			return err
+		}
+		if err := tracerProvider.Shutdown(ctx); err != nil {
+			return err
+		}
+		return nil
+	}, nil
 }

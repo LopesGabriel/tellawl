@@ -12,6 +12,7 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
+	"github.com/lopesgabriel/tellawl/packages/logger"
 	"go.opentelemetry.io/otel"
 )
 
@@ -20,7 +21,7 @@ func NewPostgresClient(ctx context.Context, dbConnectionUrl string) (*sql.DB, er
 	cfg, err := pgxpool.ParseConfig(dbConnectionUrl)
 	if err != nil {
 		err = fmt.Errorf("create connection pool: %w", err)
-		slog.Error("failed to create connection pool", slog.String("error", err.Error()))
+		logger.Error(ctx, "failed to create connection pool", slog.String("error", err.Error()))
 		return nil, err
 	}
 
@@ -30,7 +31,7 @@ func NewPostgresClient(ctx context.Context, dbConnectionUrl string) (*sql.DB, er
 
 	db := stdlib.OpenDBFromPool(pool)
 	if err != nil {
-		slog.Error("failed to connect to database", slog.String("error", err.Error()))
+		logger.Error(ctx, "failed to connect to database", slog.String("error", err.Error()))
 		return nil, err
 	}
 
@@ -40,13 +41,11 @@ func NewPostgresClient(ctx context.Context, dbConnectionUrl string) (*sql.DB, er
 func MigrateUp(migrationUrl, dbConnectionUrl string) error {
 	m, err := migrate.New(migrationUrl, dbConnectionUrl)
 	if err != nil {
-		slog.Error("failed to load migration", slog.String("error", err.Error()))
 		return err
 	}
 
 	if err := m.Up(); err != nil {
 		if err != migrate.ErrNoChange {
-			slog.Error("failed to run migration", slog.String("error", err.Error()))
 			return err
 		}
 	}
