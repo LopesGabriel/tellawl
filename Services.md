@@ -2,14 +2,14 @@
 
 List of services and a resume of it responsabilities
 
+## Member Service
+
+This service manages users and authentication.
+
 ## Wallet
 
-This is the core service, responsible for the main logic of managing the wallets,
-and registering the transactions.
-
-The service should provide APIs for Wallet CRUD operation and also to perform
-transactions. Since it knows the core database, it should also be responsible for
-returning analytics data to populate dashboards.
+This is the service responsible for managing wallets.
+It should persist wallet information and transactions.
 
 ## Notifier
 
