@@ -4,7 +4,13 @@ go 1.25.1
 
 replace github.com/lopesgabriel/tellawl/packages/logger => ../../packages/logger
 
-require github.com/lopesgabriel/tellawl/packages/logger v0.0.0-00010101000000-000000000000
+replace github.com/lopesgabriel/tellawl/packages/tracing => ../../packages/tracing
+
+require (
+	github.com/joho/godotenv v1.5.1
+	github.com/lopesgabriel/tellawl/packages/logger v0.0.0-00010101000000-000000000000
+	github.com/lopesgabriel/tellawl/packages/tracing v0.0.0-00010101000000-000000000000
+)
 
 require (
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
@@ -16,6 +22,8 @@ require (
 	go.opentelemetry.io/contrib/bridges/otelslog v0.13.0 // indirect
 	go.opentelemetry.io/otel v1.38.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc v0.14.0 // indirect
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.38.0 // indirect
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.38.0 // indirect
 	go.opentelemetry.io/otel/log v0.14.0 // indirect
 	go.opentelemetry.io/otel/metric v1.38.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.38.0 // indirect

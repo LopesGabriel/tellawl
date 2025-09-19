@@ -2,38 +2,55 @@ package main
 
 import (
 	"context"
-	"log/slog"
 
 	"github.com/lopesgabriel/tellawl/packages/logger"
+	"github.com/lopesgabriel/tellawl/packages/tracing"
+	"github.com/lopesgabriel/tellawl/services/member-service/internal/config"
+	"go.opentelemetry.io/otel"
 )
 
 func main() {
 	ctx := context.Background()
-	shutdown, err := initTelemetry(ctx)
+	configuration := config.InitAppConfigurations()
+	shutdown, err := initTelemetry(ctx, configuration)
 	if err != nil {
 		panic(err)
 	}
 	defer shutdown()
 
-	logger.Info(ctx, "Starting member service", slog.String("example", "Example Value"))
-	logger.Debug(ctx, "Debugging member service", slog.String("example", "Example Value"))
-	logger.Warn(ctx, "Warning member service", slog.String("example", "Example Value"))
-	logger.Error(ctx, "Error member service", slog.String("example", "Example Value"))
 	<-ctx.Done()
 }
 
-func initTelemetry(ctx context.Context) (func() error, error) {
+func initTelemetry(ctx context.Context, appConfig *config.AppConfiguration) (func() error, error) {
 	logProvider, err := logger.Init(ctx, logger.InitLoggerArgs{
-		CollectorURL:     "localhost:4317",
-		ServiceName:      "member-service",
-		ServiceNamespace: "tellawl",
-		ServiceVersion:   "v1.0.0",
+		CollectorURL:     appConfig.OTELCollectorUrl,
+		ServiceName:      appConfig.ServiceName,
+		ServiceNamespace: appConfig.ServiceNamespace,
+		ServiceVersion:   appConfig.Version,
 	})
 	if err != nil {
 		return nil, err
 	}
 
+	traceProvider, err := tracing.Init(ctx, tracing.NewTraceProviderArgs{
+		CollectorURL:     appConfig.OTELCollectorUrl,
+		ServiceName:      appConfig.ServiceName,
+		ServiceNamespace: appConfig.ServiceNamespace,
+		ServiceVersion:   appConfig.Version,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	otel.SetTracerProvider(traceProvider)
+
 	return func() error {
-		return logProvider.Shutdown(ctx)
+		if err := logProvider.Shutdown(ctx); err != nil {
+			return err
+		}
+		if err := traceProvider.Shutdown(ctx); err != nil {
+			return err
+		}
+		return nil
 	}, nil
 }

@@ -8,7 +8,7 @@ import (
 
 	"github.com/lopesgabriel/tellawl/packages/logger"
 	"github.com/lopesgabriel/tellawl/packages/tracing"
-	"github.com/lopesgabriel/tellawl/services/wallet/internal/core"
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/config"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/repository"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/controllers"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/database"
@@ -19,7 +19,7 @@ import (
 
 func main() {
 	ctx := context.Background()
-	appConfig := core.InitAppConfigurations()
+	appConfig := config.InitAppConfigurations()
 
 	shutdown, err := initTelemetry(ctx, appConfig)
 	if err != nil {
@@ -57,11 +57,11 @@ func main() {
 	apiHandler.Listen(appConfig.Port)
 }
 
-func initTelemetry(ctx context.Context, appConfig *core.Configuration) (func() error, error) {
+func initTelemetry(ctx context.Context, appConfig *config.AppConfiguration) (func() error, error) {
 	logProvider, err := logger.Init(ctx, logger.InitLoggerArgs{
 		CollectorURL:     appConfig.OTELCollectorUrl,
-		ServiceName:      "wallet",
-		ServiceNamespace: "tellawl",
+		ServiceName:      appConfig.ServiceName,
+		ServiceNamespace: appConfig.ServiceNamespace,
 		ServiceVersion:   appConfig.Version,
 	})
 	if err != nil {
@@ -70,8 +70,8 @@ func initTelemetry(ctx context.Context, appConfig *core.Configuration) (func() e
 
 	tracerProvider, err := tracing.Init(ctx, tracing.NewTraceProviderArgs{
 		CollectorURL:     appConfig.OTELCollectorUrl,
-		ServiceName:      "wallet",
-		ServiceNamespace: "tellawl",
+		ServiceName:      appConfig.ServiceName,
+		ServiceNamespace: appConfig.ServiceNamespace,
 		ServiceVersion:   appConfig.Version,
 	})
 	if err != nil {

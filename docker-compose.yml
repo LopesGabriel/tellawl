@@ -7,6 +7,14 @@ services:
     ports:
       - 15432:5432
 
+  member-service-db:
+    image: postgres:16.2-alpine3.19
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: member-service
+    ports:
+      - 25432:5432
+
   otel-lgtm:
     image: grafana/otel-lgtm
     ports:
