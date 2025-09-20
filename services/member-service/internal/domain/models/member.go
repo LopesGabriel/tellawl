@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -22,7 +23,23 @@ type Member struct {
 	events []events.DomainEvent
 }
 
-func CreateNewUser(firstName, lastName, email, password string) (*Member, error) {
+func CreateNewMember(firstName, lastName, email, password string) (*Member, error) {
+	if firstName == "" {
+		return nil, ErrInvalidFirstName
+	}
+
+	if lastName == "" {
+		return nil, ErrInvalidLastName
+	}
+
+	if email == "" || len(email) < 5 {
+		return nil, ErrInvalidEmail
+	}
+
+	if password == "" || len(password) < 6 {
+		return nil, ErrInvalidPassword
+	}
+
 	hashedPassword, err := HashPassword(password)
 	if err != nil {
 		return nil, err
@@ -74,3 +91,10 @@ func (u *Member) ValidatePassword(password string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(u.HashedPassword), []byte(password))
 	return err == nil
 }
+
+var (
+	ErrInvalidFirstName = fmt.Errorf("invalid first name")
+	ErrInvalidLastName  = fmt.Errorf("invalid last name")
+	ErrInvalidEmail     = fmt.Errorf("invalid email")
+	ErrInvalidPassword  = fmt.Errorf("invalid password")
+)
