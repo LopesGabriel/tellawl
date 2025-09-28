@@ -16,7 +16,7 @@ type EmailPasswordSignUpUseCaseInput struct {
 	Password  string
 }
 
-func (uc *useCase) EmailPasswordSignUp(ctx context.Context, input EmailPasswordSignUpUseCaseInput) (*models.Member, error) {
+func (uc *UseCases) EmailPasswordSignUp(ctx context.Context, input EmailPasswordSignUpUseCaseInput) (*models.Member, error) {
 	ctx, span := uc.tracer.Start(ctx, "EmailPasswordSignUp")
 	defer span.End()
 

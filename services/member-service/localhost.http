@@ -1,0 +1,23 @@
+@hostname = localhost
+@port = 8080
+@host = {{hostname}}:{{port}}
+@contentType = application/json
+@jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTgwNzg4NDcsImlzcyI6ImNvbS50ZWxsYXcuYmFuayIsInN1YiI6IjM2ZjJmOWJhLTE4Y2ItNGJlOC05YmU1LTU5Mjg1MzIyM2FjMSJ9.NGENIcz_1M5fBNAhW_OGnwwu2UTGZ9udnbL-Bh0khkw
+
+###
+
+### Health Check
+GET http://{{host}}/health
+
+###
+
+### Sign Up - Create new user
+POST http://{{host}}/signup
+Content-Type: {{contentType}}
+
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john.doe@example.com",
+  "password": "password123"
+}

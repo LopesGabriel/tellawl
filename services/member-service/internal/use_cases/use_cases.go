@@ -7,7 +7,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-type useCase struct {
+type UseCases struct {
 	jwtSecret string
 	repos     *repository.Repositories
 	tracer    trace.Tracer
@@ -19,8 +19,8 @@ type InitUseCasesArgs struct {
 	Tracer    trace.Tracer
 }
 
-func InitUseCases(args InitUseCasesArgs) *useCase {
-	return &useCase{
+func InitUseCases(args InitUseCasesArgs) *UseCases {
+	return &UseCases{
 		jwtSecret: args.JwtSecret,
 		repos:     args.Repos,
 		tracer:    args.Tracer,

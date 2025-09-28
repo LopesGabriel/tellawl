@@ -6,6 +6,10 @@ import (
 	"github.com/lopesgabriel/tellawl/packages/logger"
 	"github.com/lopesgabriel/tellawl/packages/tracing"
 	"github.com/lopesgabriel/tellawl/services/member-service/internal/config"
+	"github.com/lopesgabriel/tellawl/services/member-service/internal/domain/repository"
+	"github.com/lopesgabriel/tellawl/services/member-service/internal/infra/api"
+	inmemoryevents "github.com/lopesgabriel/tellawl/services/member-service/internal/infra/events/in_memory"
+	uc "github.com/lopesgabriel/tellawl/services/member-service/internal/use_cases"
 	"go.opentelemetry.io/otel"
 )
 
@@ -18,7 +22,19 @@ func main() {
 	}
 	defer shutdown()
 
-	<-ctx.Done()
+	tracer := tracing.GetTracer(configuration.ServiceName)
+	publisher := inmemoryevents.InitInMemoryEventPublisher()
+	repos := repository.NewInMemory(publisher)
+	usecases := uc.InitUseCases(uc.InitUseCasesArgs{
+		JwtSecret: configuration.JwtSecret,
+		Repos:     repos,
+		Tracer:    tracer,
+	})
+	api := api.NewApiHandler(usecases, configuration.Version, tracer)
+	err = api.Listen(ctx, configuration.Port)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func initTelemetry(ctx context.Context, appConfig *config.AppConfiguration) (func() error, error) {
