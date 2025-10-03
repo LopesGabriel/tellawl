@@ -12,9 +12,9 @@ import (
 
 type Repositories struct {
 	User interface {
-		FindByID(ctx context.Context, id string) (*models.User, error)
-		FindByEmail(ctx context.Context, email string) (*models.User, error)
-		Save(ctx context.Context, user *models.User) error
+		FindByID(ctx context.Context, id string) (*models.Member, error)
+		FindByEmail(ctx context.Context, email string) (*models.Member, error)
+		Save(ctx context.Context, member *models.Member) error
 	}
 	Wallet interface {
 		FindById(ctx context.Context, id string) (*models.Wallet, error)

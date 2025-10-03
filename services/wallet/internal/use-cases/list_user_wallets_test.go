@@ -2,6 +2,7 @@ package usecases_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/models"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/repository"
@@ -20,8 +21,8 @@ func TestListUserWalletsUseCase(t *testing.T) {
 			Repos:     repos,
 		})
 
-		user, _ := models.CreateNewUser("Gabriel", "Lopes", "gabriel@example.com", "pw1")
-		user2, _ := models.CreateNewUser("Matheus", "Lopes", "matheus@example.com", "pw2")
+		user := createMember("user1", "Gabriel", "Lopes", "gabriel@example.com")
+		user2 := createMember("user2", "Matheus", "Lopes", "matheus@example.com")
 
 		repos.User.Save(t.Context(), user)
 		repos.User.Save(t.Context(), user2)
@@ -45,4 +46,14 @@ func TestListUserWalletsUseCase(t *testing.T) {
 			t.Errorf("Expected 2 wallets, got %v", len(wallets))
 		}
 	})
+}
+
+func createMember(id, firstName, lastName, email string) *models.Member {
+	return &models.Member{
+		Id:        id,
+		FirstName: firstName,
+		LastName:  lastName,
+		Email:     email,
+		CreatedAt: time.Now(),
+	}
 }

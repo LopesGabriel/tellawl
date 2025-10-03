@@ -17,8 +17,8 @@ func TestShareWalletUseCase(t *testing.T) {
 		Repos:     repos,
 	})
 
-	user1, _ := models.CreateNewUser("Gabriel", "Lopes", "gabriel@example.com", "pw1")
-	user2, _ := models.CreateNewUser("Matheus", "Lopes", "matheus@example.com", "pw2")
+	user1 := createMember("member1", "Gabriel", "Lopes", "gabriel@example.com")
+	user2 := createMember("member2", "Matheus", "Lopes", "matheus@example.com")
 	repos.User.Save(t.Context(), user1)
 	repos.User.Save(t.Context(), user2)
 
@@ -35,7 +35,7 @@ func TestShareWalletUseCase(t *testing.T) {
 		t.Errorf("Expected no error, got %v", err)
 	}
 
-	if len(updatedWallet.Users) != 2 {
-		t.Errorf("Expected wallet to have 2 users, got %v", len(wallet.Users))
+	if len(updatedWallet.Members) != 2 {
+		t.Errorf("Expected wallet to have 2 users, got %v", len(wallet.Members))
 	}
 }

@@ -59,12 +59,12 @@ func (r *PostgreSQLWalletRepository) FindById(ctx context.Context, id string) (*
 	}
 
 	// Load users
-	users, err := r.loadWalletUsers(ctx, id)
+	members, err := r.loadWalletMembers(ctx, id)
 	if err != nil {
 		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
-	wallet.Users = users
+	wallet.Members = members
 
 	// Load transactions
 	transactions, err := r.loadWalletTransactions(ctx, id)
@@ -164,7 +164,7 @@ func (r *PostgreSQLWalletRepository) Save(ctx context.Context, wallet *models.Wa
 	}
 
 	// Sync wallet users
-	err = r.syncWalletUsers(ctx, tx, wallet.Id, wallet.Users)
+	err = r.syncWalletMembers(ctx, tx, wallet.Id, wallet.Members)
 	if err != nil {
 		span.SetStatus(codes.Error, err.Error())
 		return err
@@ -205,7 +205,7 @@ func (r *PostgreSQLWalletRepository) Save(ctx context.Context, wallet *models.Wa
 	return err
 }
 
-func (r *PostgreSQLWalletRepository) loadWalletUsers(ctx context.Context, walletId string) ([]models.User, error) {
+func (r *PostgreSQLWalletRepository) loadWalletMembers(ctx context.Context, walletId string) ([]models.Member, error) {
 	query := `SELECT u.id, u.first_name, u.last_name, u.email, u.hashed_password, u.created_at, u.updated_at
 			  FROM users u
 			  JOIN wallet_users wu ON u.id = wu.user_id
@@ -217,10 +217,10 @@ func (r *PostgreSQLWalletRepository) loadWalletUsers(ctx context.Context, wallet
 	}
 	defer rows.Close()
 
-	var users []models.User
+	var users []models.Member
 
 	for rows.Next() {
-		var user models.User
+		var user models.Member
 		var updatedAt sql.NullTime
 
 		err := rows.Scan(
@@ -264,7 +264,7 @@ func (r *PostgreSQLWalletRepository) loadWalletTransactions(ctx context.Context,
 
 	for rows.Next() {
 		var transaction models.Transaction
-		var user models.User
+		var user models.Member
 
 		err := rows.Scan(
 			&transaction.Id,
@@ -290,7 +290,7 @@ func (r *PostgreSQLWalletRepository) loadWalletTransactions(ctx context.Context,
 	return transactions, nil
 }
 
-func (r *PostgreSQLWalletRepository) syncWalletUsers(ctx context.Context, tx *sql.Tx, walletId string, users []models.User) error {
+func (r *PostgreSQLWalletRepository) syncWalletMembers(ctx context.Context, tx *sql.Tx, walletId string, users []models.Member) error {
 	// Get current user IDs
 	rows, err := tx.QueryContext(ctx, "SELECT user_id FROM wallet_users WHERE wallet_id = $1", walletId)
 	if err != nil {

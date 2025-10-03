@@ -20,7 +20,7 @@ func TestWalletCreation(t *testing.T) {
 	})
 
 	userId := uuid.NewString()
-	user := models.User{
+	user := models.Member{
 		Id:        userId,
 		FirstName: "Gabriel",
 		LastName:  "Lopes",

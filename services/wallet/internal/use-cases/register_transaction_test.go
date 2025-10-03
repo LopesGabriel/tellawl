@@ -22,7 +22,7 @@ func TestRegisterTransactionUseCase(t *testing.T) {
 		repos = repository.NewInMemory(eventPublisher)
 		useCases := usecases.NewUseCases(useCaseArgs)
 
-		user, _ := models.CreateNewUser("Matheus", "Lopes", "matheus@example.com", "pw2")
+		user := createMember("member1", "Matheus", "Lopes", "matheus@example.com")
 		repos.User.Save(t.Context(), user)
 
 		wallet := models.CreateNewWallet("Test wallet", user)
@@ -65,7 +65,7 @@ func TestRegisterTransactionUseCase(t *testing.T) {
 		repos = repository.NewInMemory(eventPublisher)
 		useCases := usecases.NewUseCases(useCaseArgs)
 
-		user, _ := models.CreateNewUser("Matheus", "Lopes", "matheus@example.com", "pw2")
+		user := createMember("member1", "Matheus", "Lopes", "matheus@example.com")
 		repos.User.Save(t.Context(), user)
 
 		wallet := models.CreateNewWallet("Test wallet", user)
@@ -109,8 +109,8 @@ func TestRegisterTransactionUseCase(t *testing.T) {
 		repos = repository.NewInMemory(eventPublisher)
 		useCases := usecases.NewUseCases(useCaseArgs)
 
-		user, _ := models.CreateNewUser("Gabriel", "Lopes", "gabriel@example.com", "pw1")
-		user2, _ := models.CreateNewUser("Matheus", "Lopes", "matheus@example.com", "pw2")
+		user := createMember("member1", "Gabriel", "Lopes", "gabriel@example.com")
+		user2 := createMember("member2", "Matheus", "Lopes", "matheus@example.com")
 		repos.User.Save(t.Context(), user)
 		repos.User.Save(t.Context(), user2)
 
@@ -148,8 +148,8 @@ func TestRegisterTransactionUseCase(t *testing.T) {
 		repos = repository.NewInMemory(eventPublisher)
 		useCases := usecases.NewUseCases(useCaseArgs)
 
-		user, _ := models.CreateNewUser("Gabriel", "Lopes", "gabriel@example.com", "pw1")
-		user2, _ := models.CreateNewUser("Matheus", "Lopes", "matheus@example.com", "pw2")
+		user := createMember("member1", "Gabriel", "Lopes", "gabriel@example.com")
+		user2 := createMember("member2", "Matheus", "Lopes", "matheus@example.com")
 		repos.User.Save(t.Context(), user)
 		repos.User.Save(t.Context(), user2)
 

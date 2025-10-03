@@ -29,7 +29,7 @@ func NewPostgreSQLUserRepository(db *sql.DB, publisher ports.EventPublisher) *Po
 	}
 }
 
-func (r *PostgreSQLUserRepository) FindByID(ctx context.Context, id string) (*models.User, error) {
+func (r *PostgreSQLUserRepository) FindByID(ctx context.Context, id string) (*models.Member, error) {
 	ctx, span := r.tracer.Start(ctx, "PostgreSQLUserRepository.FindByID")
 	defer span.End()
 
@@ -38,7 +38,7 @@ func (r *PostgreSQLUserRepository) FindByID(ctx context.Context, id string) (*mo
 
 	row := r.db.QueryRowContext(ctx, query, id)
 
-	var user models.User
+	var user models.Member
 	var updatedAt sql.NullTime
 
 	err := row.Scan(
@@ -64,7 +64,7 @@ func (r *PostgreSQLUserRepository) FindByID(ctx context.Context, id string) (*mo
 	return &user, nil
 }
 
-func (r *PostgreSQLUserRepository) FindByEmail(ctx context.Context, email string) (*models.User, error) {
+func (r *PostgreSQLUserRepository) FindByEmail(ctx context.Context, email string) (*models.Member, error) {
 	ctx, span := r.tracer.Start(ctx, "PostgreSQLUserRepository.FindByEmail")
 	defer span.End()
 
@@ -73,7 +73,7 @@ func (r *PostgreSQLUserRepository) FindByEmail(ctx context.Context, email string
 
 	row := r.db.QueryRowContext(ctx, query, email)
 
-	var user models.User
+	var user models.Member
 	var updatedAt sql.NullTime
 
 	err := row.Scan(
@@ -107,7 +107,7 @@ func (r *PostgreSQLUserRepository) FindByEmail(ctx context.Context, email string
 	return &user, nil
 }
 
-func (r *PostgreSQLUserRepository) Save(ctx context.Context, user *models.User) error {
+func (r *PostgreSQLUserRepository) Save(ctx context.Context, user *models.Member) error {
 	ctx, span := r.tracer.Start(ctx, "PostgreSQLUserRepository.Save")
 	defer span.End()
 

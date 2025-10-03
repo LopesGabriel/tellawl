@@ -3,12 +3,11 @@ package models
 import (
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/events"
 	"golang.org/x/crypto/bcrypt"
 )
 
-type User struct {
+type Member struct {
 	Id string
 
 	FirstName      string
@@ -22,46 +21,15 @@ type User struct {
 	events []events.DomainEvent
 }
 
-func CreateNewUser(firstName, lastName, email, password string) (*User, error) {
-	hashedPassword, err := HashPassword(password)
-	if err != nil {
-		return nil, err
-	}
-
-	id := uuid.NewString()
-	currentTime := time.Now()
-
-	user := &User{
-		Id:             id,
-		FirstName:      firstName,
-		LastName:       lastName,
-		Email:          email,
-		HashedPassword: hashedPassword,
-
-		CreatedAt: currentTime,
-		UpdatedAt: nil,
-	}
-
-	user.AddEvent(events.UserCreatedEvent{
-		UserId:    user.Id,
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
-		Email:     user.Email,
-		Timestamp: currentTime,
-	})
-
-	return user, nil
-}
-
-func (u *User) AddEvent(event events.DomainEvent) {
+func (u *Member) AddEvent(event events.DomainEvent) {
 	u.events = append(u.events, event)
 }
 
-func (u *User) Events() []events.DomainEvent {
+func (u *Member) Events() []events.DomainEvent {
 	return u.events
 }
 
-func (u *User) ClearEvents() {
+func (u *Member) ClearEvents() {
 	u.events = nil
 }
 
@@ -70,7 +38,7 @@ func HashPassword(password string) (string, error) {
 	return string(bytes), err
 }
 
-func (u *User) ValidatePassword(password string) bool {
+func (u *Member) ValidatePassword(password string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(u.HashedPassword), []byte(password))
 	return err == nil
 }

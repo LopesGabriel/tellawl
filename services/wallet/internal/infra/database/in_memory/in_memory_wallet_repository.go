@@ -74,7 +74,7 @@ func (r InMemoryWalletRepository) FindByUserId(ctx context.Context, userId strin
 	var wallets []models.Wallet
 
 	for _, wallet := range r.items {
-		if wallet.IsUserAllowedToRegisterTransactions(userId) {
+		if wallet.IsMemberAllowedToRegisterTransactions(userId) {
 			wallets = append(wallets, wallet)
 		}
 	}

@@ -33,8 +33,6 @@ func (handler *APIHandler) registerEndpoints() *mux.Router {
 	router.Use(handler.requestInterceptorMiddleware)
 
 	router.HandleFunc("/health", handler.HandleHealthCheck).Methods("GET")
-	router.HandleFunc("/sign-up", handler.HandleSignUp).Methods("POST")
-	router.HandleFunc("/sign-in", handler.HandleSignIn).Methods("POST")
 
 	// Authenticated routes
 	router.Handle("/wallets", jwtAuthMiddleware(

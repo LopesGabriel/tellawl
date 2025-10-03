@@ -14,7 +14,7 @@ type Wallet struct {
 	Name      string
 	Balance   Monetary
 
-	Users        []User
+	Members      []Member
 	Transactions []Transaction
 
 	CreatedAt time.Time
@@ -23,19 +23,19 @@ type Wallet struct {
 	events []events.DomainEvent
 }
 
-func (w *Wallet) AddUser(user *User) {
-	w.Users = append(w.Users, *user)
+func (w *Wallet) AddUser(member *Member) {
+	w.Members = append(w.Members, *member)
 	currentTime := time.Now()
 
 	w.AddEvent(events.WalletShared{
 		WalletId:  w.Id,
-		UserId:    user.Id,
+		UserId:    member.Id,
 		Timestamp: currentTime,
 	})
 	w.UpdatedAt = &currentTime
 }
 
-func (w *Wallet) RegisterNewTransaction(amount Monetary, creator User, transactionType TransactionType, description string) (*Transaction, error) {
+func (w *Wallet) RegisterNewTransaction(amount Monetary, creator Member, transactionType TransactionType, description string) (*Transaction, error) {
 	id := uuid.NewString()
 	currentTime := time.Now()
 
@@ -43,7 +43,7 @@ func (w *Wallet) RegisterNewTransaction(amount Monetary, creator User, transacti
 		return nil, errors.New("invalid amount: must be greater than 0")
 	}
 
-	if !w.IsUserAllowedToRegisterTransactions(creator.Id) {
+	if !w.IsMemberAllowedToRegisterTransactions(creator.Id) {
 		return nil, errors.New("user is not allowed to register transactions")
 	}
 
@@ -92,7 +92,7 @@ func (w *Wallet) ClearEvents() {
 	w.events = nil
 }
 
-func CreateNewWallet(name string, creator *User) *Wallet {
+func CreateNewWallet(name string, creator *Member) *Wallet {
 	walletId := uuid.NewString()
 	wallet := &Wallet{
 		Id:        walletId,
@@ -102,7 +102,7 @@ func CreateNewWallet(name string, creator *User) *Wallet {
 			Value:  0,
 			Offset: 100,
 		},
-		Users:        []User{*creator},
+		Members:      []Member{*creator},
 		Transactions: []Transaction{},
 		CreatedAt:    time.Now(),
 	}
@@ -117,13 +117,13 @@ func CreateNewWallet(name string, creator *User) *Wallet {
 	return wallet
 }
 
-func (w *Wallet) IsUserAllowedToRegisterTransactions(userId string) bool {
-	if w.CreatorId == userId {
+func (w *Wallet) IsMemberAllowedToRegisterTransactions(memberId string) bool {
+	if w.CreatorId == memberId {
 		return true
 	}
 
-	for _, user := range w.Users {
-		if user.Id == userId {
+	for _, member := range w.Members {
+		if member.Id == memberId {
 			return true
 		}
 	}

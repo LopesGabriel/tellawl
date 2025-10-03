@@ -12,19 +12,19 @@ import (
 )
 
 type InMemoryUserRepository struct {
-	items     []models.User
+	items     []models.Member
 	publisher ports.EventPublisher
 }
 
 func NewInMemoryUserRepository(publisher ports.EventPublisher) *InMemoryUserRepository {
 	return &InMemoryUserRepository{
-		items:     []models.User{},
+		items:     []models.Member{},
 		publisher: publisher,
 	}
 }
 
-func (r InMemoryUserRepository) FindByID(ctx context.Context, id string) (*models.User, error) {
-	var user models.User
+func (r InMemoryUserRepository) FindByID(ctx context.Context, id string) (*models.Member, error) {
+	var user models.Member
 
 	for _, u := range r.items {
 		if u.Id == id {
@@ -40,8 +40,8 @@ func (r InMemoryUserRepository) FindByID(ctx context.Context, id string) (*model
 	return &user, nil
 }
 
-func (r InMemoryUserRepository) FindByEmail(ctx context.Context, email string) (*models.User, error) {
-	var user models.User
+func (r InMemoryUserRepository) FindByEmail(ctx context.Context, email string) (*models.Member, error) {
+	var user models.Member
 
 	for _, u := range r.items {
 		if u.Email == email {
@@ -57,7 +57,7 @@ func (r InMemoryUserRepository) FindByEmail(ctx context.Context, email string) (
 	return &user, nil
 }
 
-func (r *InMemoryUserRepository) Save(ctx context.Context, user *models.User) error {
+func (r *InMemoryUserRepository) Save(ctx context.Context, user *models.Member) error {
 	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
 	defer cancel()
 

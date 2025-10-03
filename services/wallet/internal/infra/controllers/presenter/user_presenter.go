@@ -7,7 +7,7 @@ import (
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/models"
 )
 
-type HTTPUser struct {
+type HTTPMember struct {
 	Id        string     `json:"id"`
 	FirstName string     `json:"first_name"`
 	LastName  string     `json:"last_name"`
@@ -16,20 +16,20 @@ type HTTPUser struct {
 	UpdatedAt *time.Time `json:"updated_at"`
 }
 
-func NewHTTPUser(user models.User) HTTPUser {
-	httpUser := HTTPUser{
-		Id:        user.Id,
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
-		Email:     user.Email,
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
+func NewHTTPMember(member models.Member) HTTPMember {
+	httpMember := HTTPMember{
+		Id:        member.Id,
+		FirstName: member.FirstName,
+		LastName:  member.LastName,
+		Email:     member.Email,
+		CreatedAt: member.CreatedAt,
+		UpdatedAt: member.UpdatedAt,
 	}
 
-	return httpUser
+	return httpMember
 }
 
-func (w HTTPUser) ToJSON() []byte {
+func (w HTTPMember) ToJSON() []byte {
 	data, err := json.Marshal(w)
 	if err != nil {
 		return []byte{}

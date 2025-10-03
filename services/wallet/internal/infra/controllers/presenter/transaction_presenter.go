@@ -10,7 +10,7 @@ import (
 type HTTPTransaction struct {
 	Id              string       `json:"id"`
 	Amount          HTTPMonetary `json:"amount"`
-	CreatedBy       HTTPUser     `json:"created_by"`
+	CreatedBy       HTTPMember   `json:"created_by"`
 	TransactionType string       `json:"transaction_type"`
 	Description     string       `json:"description"`
 	CreatedAt       time.Time    `json:"created_at"`
@@ -21,7 +21,7 @@ func NewHTTPTransaction(transaction models.Transaction) HTTPTransaction {
 	httpTransaction := HTTPTransaction{
 		Id:              transaction.Id,
 		Amount:          NewHTTPMonetary(transaction.Amount),
-		CreatedBy:       NewHTTPUser(transaction.CreatedBy),
+		CreatedBy:       NewHTTPMember(transaction.CreatedBy),
 		TransactionType: string(transaction.Type),
 		Description:     transaction.Description,
 		CreatedAt:       transaction.CreatedAt,
