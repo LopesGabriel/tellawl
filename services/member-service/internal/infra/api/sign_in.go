@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -11,19 +12,17 @@ import (
 	"go.opentelemetry.io/otel/codes"
 )
 
-type signUpRequest struct {
-	Email     string `json:"email"`
-	Password  string `json:"password"`
-	FirstName string `json:"firstName"`
-	LastName  string `json:"lastName"`
+type signInRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
-func (h *apiHandler) HandleSignUp(w http.ResponseWriter, r *http.Request) error {
-	ctx, span := h.tracer.Start(r.Context(), "HandleSignUp")
+func (h *apiHandler) HandleSignIn(w http.ResponseWriter, r *http.Request) error {
+	ctx, span := h.tracer.Start(r.Context(), "HandleSignIn")
 	defer span.End()
 	w.Header().Add("Trace-ID", span.SpanContext().TraceID().String())
 
-	var requestData signUpRequest
+	var requestData signInRequest
 	err := json.NewDecoder(r.Body).Decode(&requestData)
 	defer r.Body.Close()
 	if err != nil {
@@ -33,30 +32,31 @@ func (h *apiHandler) HandleSignUp(w http.ResponseWriter, r *http.Request) error 
 
 	h.logger.Debug(
 		ctx,
-		"Attempting to Sign Up new member",
+		"Attempting to Sign In member",
 		slog.String("email", fmt.Sprintf("%s%s", requestData.Email[:4], strings.Repeat("*", len(requestData.Email)-4))),
 	)
-	member, err := h.usecases.EmailPasswordSignUp(ctx, usecases.EmailPasswordSignUpUseCaseInput{
-		Email:     requestData.Email,
-		FirstName: requestData.FirstName,
-		LastName:  requestData.LastName,
-		Password:  requestData.Password,
+	output, err := h.usecases.SignIn(ctx, usecases.SignInUseCaseInput{
+		Email:    requestData.Email,
+		Password: requestData.Password,
 	})
-
 	if err != nil {
-		span.SetStatus(codes.Error, "Could not sign up the member")
-		return NewInternalError(ctx, "Could not sign up the member", err)
+		if errors.Is(err, usecases.ErrInvalidCredentials) {
+			span.SetStatus(codes.Error, "Invalid credentials")
+			return NewBadRequestError(ctx, "Invalid credentials", err)
+		}
+
+		span.SetStatus(codes.Error, "Could not sign in the member")
+		return NewInternalError(ctx, "Could not sign in the member", err)
 	}
 
 	h.logger.Debug(
 		ctx,
-		"Member signed up successfully",
+		"Member signed in successfully",
 		slog.String("email", fmt.Sprintf("%s%s", requestData.Email[:4], strings.Repeat("*", len(requestData.Email)-4))),
-		slog.String("memberId", member.Id),
 	)
 	span.SetStatus(codes.Ok, "OK")
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(toMemberAPIResponse(member))
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(output)
 	return nil
 }

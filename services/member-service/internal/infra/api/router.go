@@ -13,6 +13,7 @@ func (h *apiHandler) setupRoutes() *mux.Router {
 
 	// Use error middleware for all routes
 	router.HandleFunc("/signup", h.ErrorMiddleware(h.HandleSignUp)).Methods("POST")
+	router.HandleFunc("/signin", h.ErrorMiddleware(h.HandleSignIn)).Methods("POST")
 
 	return router
 }

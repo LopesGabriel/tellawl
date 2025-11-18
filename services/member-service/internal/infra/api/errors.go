@@ -7,7 +7,6 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/lopesgabriel/tellawl/packages/logger"
 	usecases "github.com/lopesgabriel/tellawl/services/member-service/internal/use_cases"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
@@ -60,7 +59,7 @@ func (h *apiHandler) ErrorMiddleware(handler HandlerFunc) http.HandlerFunc {
 				span := trace.SpanFromContext(appErr.Context)
 
 				if errors.Is(appErr.Err, usecases.ErrMemberAlreadyExists) {
-					logger.Error(appErr.Context, "Member already exists", slog.String("error", err.Error()))
+					h.logger.Error(appErr.Context, "Member already exists", slog.String("error", err.Error()))
 					writeError(w, http.StatusConflict, map[string]any{
 						"message": "Member already exists",
 					})
@@ -69,7 +68,7 @@ func (h *apiHandler) ErrorMiddleware(handler HandlerFunc) http.HandlerFunc {
 				}
 
 				if errors.Is(appErr.Err, usecases.ErrMemberNotFound) {
-					logger.Error(appErr.Context, "Member not found", slog.String("error", err.Error()))
+					h.logger.Error(appErr.Context, "Member not found", slog.String("error", err.Error()))
 					writeError(w, http.StatusNotFound, map[string]any{
 						"message": "Member not found",
 					})
@@ -77,7 +76,7 @@ func (h *apiHandler) ErrorMiddleware(handler HandlerFunc) http.HandlerFunc {
 					return
 				}
 
-				logger.Error(appErr.Context, appErr.Message, slog.String("error", appErr.Error()))
+				h.logger.Error(appErr.Context, appErr.Message, slog.String("error", appErr.Error()))
 				writeError(w, appErr.Code, map[string]any{
 					"message": appErr.Message,
 				})
@@ -87,7 +86,7 @@ func (h *apiHandler) ErrorMiddleware(handler HandlerFunc) http.HandlerFunc {
 
 			span := trace.SpanFromContext(ctx)
 			// Handle unknown errors
-			logger.Error(ctx, "Internal server error", slog.String("error", err.Error()))
+			h.logger.Error(ctx, "Internal server error", slog.String("error", err.Error()))
 			writeError(w, http.StatusInternalServerError, map[string]any{
 				"message": "Internal server error",
 			})

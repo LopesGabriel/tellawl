@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/lopesgabriel/tellawl/packages/logger"
 	"github.com/lopesgabriel/tellawl/packages/tracing"
@@ -22,6 +23,11 @@ func main() {
 	}
 	defer shutdown()
 
+	appLogger, err := logger.GetLogger()
+	if err != nil {
+		panic(err)
+	}
+
 	tracer := tracing.GetTracer(configuration.ServiceName)
 	publisher := inmemoryevents.InitInMemoryEventPublisher()
 	repos := repository.NewInMemory(publisher)
@@ -29,8 +35,9 @@ func main() {
 		JwtSecret: configuration.JwtSecret,
 		Repos:     repos,
 		Tracer:    tracer,
+		Logger:    appLogger,
 	})
-	api := api.NewApiHandler(usecases, configuration.Version, tracer)
+	api := api.NewApiHandler(usecases, configuration.Version, tracer, appLogger)
 	err = api.Listen(ctx, configuration.Port)
 	if err != nil {
 		panic(err)
@@ -38,11 +45,13 @@ func main() {
 }
 
 func initTelemetry(ctx context.Context, appConfig *config.AppConfiguration) (func() error, error) {
-	logProvider, err := logger.Init(ctx, logger.InitLoggerArgs{
+	appLogger, err := logger.Init(ctx, logger.InitLoggerArgs{
 		CollectorURL:     appConfig.OTELCollectorUrl,
 		ServiceName:      appConfig.ServiceName,
 		ServiceNamespace: appConfig.ServiceNamespace,
 		ServiceVersion:   appConfig.Version,
+		Level:            slog.LevelDebug,
+		LoggerProvider:   nil,
 	})
 	if err != nil {
 		return nil, err
@@ -61,7 +70,7 @@ func initTelemetry(ctx context.Context, appConfig *config.AppConfiguration) (fun
 	otel.SetTracerProvider(traceProvider)
 
 	return func() error {
-		if err := logProvider.Shutdown(ctx); err != nil {
+		if err := appLogger.Shutdown(ctx); err != nil {
 			return err
 		}
 		if err := traceProvider.Shutdown(ctx); err != nil {

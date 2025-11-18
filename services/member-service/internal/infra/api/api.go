@@ -15,26 +15,28 @@ type apiHandler struct {
 	usecases *usecases.UseCases
 	version  string
 	tracer   trace.Tracer
+	logger   *logger.AppLogger
 }
 
-func NewApiHandler(usecases *usecases.UseCases, version string, tracer trace.Tracer) *apiHandler {
+func NewApiHandler(usecases *usecases.UseCases, version string, tracer trace.Tracer, logger *logger.AppLogger) *apiHandler {
 	return &apiHandler{
 		usecases: usecases,
 		version:  version,
 		tracer:   tracer,
+		logger:   logger,
 	}
 }
 
 func (handler *apiHandler) Listen(ctx context.Context, port int) error {
 	router := handler.setupRoutes()
-	logger.Info(ctx, "Starting api server", slog.Int("port", port))
+	handler.logger.Info(ctx, "Starting api server", slog.Int("port", port))
 	return http.ListenAndServe(fmt.Sprintf(":%d", port), router)
 }
 
 func (handler *apiHandler) requestInterceptorMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("X-Server-Version", handler.version)
-		logger.Debug(r.Context(), "processing new request",
+		handler.logger.Debug(r.Context(), "processing new request",
 			slog.String("method", r.Method),
 			slog.String("path", r.URL.Path),
 		)

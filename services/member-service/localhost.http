@@ -21,3 +21,14 @@ Content-Type: {{contentType}}
   "email": "john.doe@example.com",
   "password": "password123"
 }
+
+###
+
+### Sign In - Generates a jwt token
+POST http://{{host}}/signin
+Content-Type: {{contentType}}
+
+{
+  "email": "john.doe@example.com",
+  "password": "password123"
+}
