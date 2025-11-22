@@ -18,7 +18,7 @@ func newExporter(ctx context.Context, args NewTraceProviderArgs) (*otlptrace.Exp
 		otlptracegrpc.WithEndpoint(args.CollectorURL),
 	}
 
-	if !strings.Contains(args.CollectorURL, "https://") {
+	if !strings.Contains(args.CollectorURL, "grpcs://") {
 		options = append(options, otlptracegrpc.WithInsecure())
 	}
 

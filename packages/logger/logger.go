@@ -52,23 +52,17 @@ func Init(ctx context.Context, args InitLoggerArgs) (*AppLogger, error) {
 
 	global.SetLoggerProvider(logProvider)
 
-	otelslog.NewLogger(
-		fmt.Sprintf("%s/%s", args.ServiceNamespace, args.ServiceName),
-		otelslog.WithLoggerProvider(logProvider),
-	)
-
 	logger := otelslog.NewLogger(
 		fmt.Sprintf("%s/%s", args.ServiceNamespace, args.ServiceName),
 		otelslog.WithLoggerProvider(logProvider),
 	)
 
-	al := &AppLogger{
+	appLogger = &AppLogger{
 		logger:         logger,
 		loggerProvider: logProvider,
 		Level:          args.Level,
 	}
-	al.SetLevel(args.Level)
-	appLogger = al
+	appLogger.SetLevel(ctx, args.Level)
 
 	return appLogger, nil
 }
@@ -81,11 +75,9 @@ func GetLogger() (*AppLogger, error) {
 	return appLogger, nil
 }
 
-func (l *AppLogger) SetLevel(level slog.Level) {
+func (l *AppLogger) SetLevel(ctx context.Context, level slog.Level) {
 	l.Level = level
-	l.logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		Level: level,
-	}))
+	l.logger.Enabled(ctx, level)
 }
 
 func (l *AppLogger) Info(ctx context.Context, message string, args ...any) {

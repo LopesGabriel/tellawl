@@ -14,7 +14,7 @@ func newProvider(ctx context.Context, resource *resource.Resource, args InitLogg
 		otlploggrpc.WithEndpoint(args.CollectorURL),
 	}
 
-	if !strings.Contains(args.CollectorURL, "https://") {
+	if !strings.Contains(args.CollectorURL, "grpcs://") {
 		options = append(options, otlploggrpc.WithInsecure())
 	}
 
