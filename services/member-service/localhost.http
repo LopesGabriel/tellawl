@@ -32,3 +32,11 @@ Content-Type: {{contentType}}
   "email": "john.doe@example.com",
   "password": "password123"
 }
+
+###
+
+### Refresh Token - Generates new jwt token
+# @prompt refreshToken Your refresh token
+POST http://{{host}}/refresh-token
+Content-Type: {{contentType}}
+Authorization: Bearer {{refreshToken}}
