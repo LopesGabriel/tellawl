@@ -40,3 +40,11 @@ Content-Type: {{contentType}}
 POST http://{{host}}/refresh-token
 Content-Type: {{contentType}}
 Authorization: Bearer {{refreshToken}}
+
+###
+
+### Get current user
+# @prompt token Your token
+GET http://{{host}}/me
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}

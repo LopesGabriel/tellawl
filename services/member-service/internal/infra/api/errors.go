@@ -32,6 +32,10 @@ func NewBadRequestError(ctx context.Context, message string, err error) *AppErro
 	return &AppError{Code: http.StatusBadRequest, Message: message, Err: err, Context: ctx}
 }
 
+func NewUnauthorizedError(ctx context.Context, message string) *AppError {
+	return &AppError{Code: http.StatusUnauthorized, Message: message, Context: ctx}
+}
+
 func NewNotFoundError(ctx context.Context, message string) *AppError {
 	return &AppError{Code: http.StatusNotFound, Message: message, Context: ctx}
 }
