@@ -6,15 +6,16 @@ import (
 
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/models"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/ports"
+	repohttp "github.com/lopesgabriel/tellawl/services/wallet/internal/infra/database/http"
 	inmemory "github.com/lopesgabriel/tellawl/services/wallet/internal/infra/database/in_memory"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/database/postgresql"
 )
 
 type Repositories struct {
-	User interface {
+	Member interface {
 		FindByID(ctx context.Context, id string) (*models.Member, error)
 		FindByEmail(ctx context.Context, email string) (*models.Member, error)
-		Save(ctx context.Context, member *models.Member) error
+		ValidateToken(ctx context.Context, token string) (*models.Member, error)
 	}
 	Wallet interface {
 		FindById(ctx context.Context, id string) (*models.Wallet, error)
@@ -25,14 +26,14 @@ type Repositories struct {
 
 func NewInMemory(publisher ports.EventPublisher) *Repositories {
 	return &Repositories{
-		User:   inmemory.NewInMemoryUserRepository(publisher),
+		Member: inmemory.NewInMemoryMemberRepository(publisher),
 		Wallet: inmemory.NewInMemoryWalletRepository(publisher),
 	}
 }
 
-func NewPostgreSQL(db *sql.DB, publisher ports.EventPublisher) *Repositories {
+func NewPostgreSQL(db *sql.DB, publisher ports.EventPublisher, memberRepo *repohttp.HTTPMemberRepository) *Repositories {
 	return &Repositories{
-		User:   postgresql.NewPostgreSQLUserRepository(db, publisher),
-		Wallet: postgresql.NewPostgreSQLWalletRepository(db, publisher),
+		Member: memberRepo,
+		Wallet: postgresql.NewPostgreSQLWalletRepository(db, publisher, memberRepo),
 	}
 }

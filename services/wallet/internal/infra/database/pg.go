@@ -18,10 +18,15 @@ import (
 
 // initialize a SQL client for postgresql
 func NewPostgresClient(ctx context.Context, dbConnectionUrl string) (*sql.DB, error) {
+	appLogger, err := logger.GetLogger()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get logger: %w", err)
+	}
+
 	cfg, err := pgxpool.ParseConfig(dbConnectionUrl)
 	if err != nil {
 		err = fmt.Errorf("create connection pool: %w", err)
-		logger.Error(ctx, "failed to create connection pool", slog.String("error", err.Error()))
+		appLogger.Error(ctx, "failed to create connection pool", slog.String("error", err.Error()))
 		return nil, err
 	}
 
@@ -31,7 +36,7 @@ func NewPostgresClient(ctx context.Context, dbConnectionUrl string) (*sql.DB, er
 
 	db := stdlib.OpenDBFromPool(pool)
 	if err != nil {
-		logger.Error(ctx, "failed to connect to database", slog.String("error", err.Error()))
+		appLogger.Error(ctx, "failed to connect to database", slog.String("error", err.Error()))
 		return nil, err
 	}
 

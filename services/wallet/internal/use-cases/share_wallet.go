@@ -14,7 +14,7 @@ type ShareWalletUseCaseInput struct {
 }
 
 func (usecase *UseCase) ShareWallet(ctx context.Context, input ShareWalletUseCaseInput) (*models.Wallet, error) {
-	creatorUser, err := usecase.repos.User.FindByID(ctx, input.WalletCreatorId)
+	creatorUser, err := usecase.repos.Member.FindByID(ctx, input.WalletCreatorId)
 	if err != nil {
 		return nil, err
 	}
@@ -28,7 +28,7 @@ func (usecase *UseCase) ShareWallet(ctx context.Context, input ShareWalletUseCas
 		return nil, errx.ErrInsufficientPermissions
 	}
 
-	sharedUser, err := usecase.repos.User.FindByEmail(ctx, input.SharedUserEmail)
+	sharedUser, err := usecase.repos.Member.FindByEmail(ctx, input.SharedUserEmail)
 	if err != nil {
 		return nil, err
 	}

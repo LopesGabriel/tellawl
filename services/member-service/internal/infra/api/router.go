@@ -9,14 +9,19 @@ func (h *apiHandler) setupRoutes() *mux.Router {
 
 	router.Use(h.requestInterceptorMiddleware)
 
-	router.HandleFunc("/health", h.HandleHealthCheck).Methods("GET")
+	// Health check route
+	router.HandleFunc("/internal/health", h.HandleHealthCheck).Methods("GET")
 
-	// Use error middleware for all routes
-	router.HandleFunc("/signup", h.ErrorMiddleware(h.HandleSignUp)).Methods("POST")
-	router.HandleFunc("/signin", h.ErrorMiddleware(h.HandleSignIn)).Methods("POST")
-	router.HandleFunc("/refresh-token", h.ErrorMiddleware(h.HandleRefreshToken)).Methods("POST")
+	// Authentication routes
+	router.HandleFunc("/public/signup", h.ErrorMiddleware(h.HandleSignUp)).Methods("POST")
+	router.HandleFunc("/public/signin", h.ErrorMiddleware(h.HandleSignIn)).Methods("POST")
+	router.HandleFunc("/public/refresh-token", h.ErrorMiddleware(h.HandleRefreshToken)).Methods("POST")
 
-	router.HandleFunc("/me", h.ErrorMiddleware(h.HandleMe)).Methods("GET")
+	router.HandleFunc("/public/me", h.ErrorMiddleware(h.HandleMe)).Methods("GET")
+
+	// Internal routes
+	router.HandleFunc("/internal/members", h.ErrorMiddleware(h.HandleListMembers)).Methods("GET")
+	router.HandleFunc("/internal/members/{id}", h.ErrorMiddleware(h.HandleGetMemberByID)).Methods("GET")
 
 	return router
 }

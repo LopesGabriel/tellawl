@@ -12,7 +12,7 @@ type ListUserWalletsUseCaseInput struct {
 }
 
 func (usecase *UseCase) ListUserWallets(ctx context.Context, input ListUserWalletsUseCaseInput) ([]models.Wallet, error) {
-	user, err := usecase.repos.User.FindByID(ctx, input.UserId)
+	user, err := usecase.repos.Member.FindByID(ctx, input.UserId)
 	if err != nil {
 		return nil, errx.ErrInvalidCreatorID
 	}

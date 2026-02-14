@@ -8,12 +8,19 @@ import (
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/events"
 )
 
-type InMemoryEventPublisher struct {
+type inMemoryEventPublisher struct {
+	logger *logger.AppLogger
 }
 
-func (p InMemoryEventPublisher) Publish(ctx context.Context, events []events.DomainEvent) error {
+func NewInMemoryEventPublisher(logger *logger.AppLogger) *inMemoryEventPublisher {
+	return &inMemoryEventPublisher{
+		logger: logger,
+	}
+}
+
+func (p inMemoryEventPublisher) Publish(ctx context.Context, events []events.DomainEvent) error {
 	for _, event := range events {
-		logger.Debug(
+		p.logger.Debug(
 			ctx,
 			"New Event published",
 			slog.Any("occurred_at", event.OccurredAt()),

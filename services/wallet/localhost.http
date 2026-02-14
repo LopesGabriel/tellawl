@@ -1,38 +1,14 @@
 @hostname = localhost
-@port = 8080
+@port = 8083
 @host = {{hostname}}:{{port}}
 @contentType = application/json
-@jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTgwNzg4NDcsImlzcyI6ImNvbS50ZWxsYXcuYmFuayIsInN1YiI6IjM2ZjJmOWJhLTE4Y2ItNGJlOC05YmU1LTU5Mjg1MzIyM2FjMSJ9.NGENIcz_1M5fBNAhW_OGnwwu2UTGZ9udnbL-Bh0khkw
+@jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzExMTg1NDQsImlhdCI6MTc3MTAzMjE0NCwic3ViIjoiYjhiYThlNDQtOTc0NC00YmJjLTgyNTAtYWQzYmY4Njc4ZjViIn0.lMYkUKXBzLwK-gTmI_WRMEBDT79kKS548__vidGGTkw
 @walletId = 9ea5fa96-8989-48fb-867b-c3a8891a9b28
 
 ###
 
 ### Health Check
 GET http://{{host}}/health
-
-###
-
-### Sign Up - Create new user
-POST http://{{host}}/sign-up
-Content-Type: {{contentType}}
-
-{
-  "first_name": "John",
-  "last_name": "Doe",
-  "email": "john.doe@example.com",
-  "password": "password123"
-}
-
-###
-
-### Sign In - Authenticate user
-POST http://{{host}}/sign-in
-Content-Type: {{contentType}}
-
-{
-  "email": "john.doe@example.com",
-  "password": "password123"
-}
 
 ###
 
@@ -71,7 +47,7 @@ Content-Type: {{contentType}}
 Authorization: Bearer {{jwtToken}}
 
 {
-  "amount": 8040,
-  "transaction_type": "withdraw",
-  "description": "Pizza Grande com Refri"
+  "amount": 10000,
+  "transaction_type": "deposit",
+  "description": "Guardando dinheiro para comprar um novo celular"
 }

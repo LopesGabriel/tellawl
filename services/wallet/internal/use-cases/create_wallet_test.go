@@ -5,18 +5,34 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/lopesgabriel/tellawl/packages/logger"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/models"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/repository"
+	inmemory "github.com/lopesgabriel/tellawl/services/wallet/internal/infra/database/in_memory"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/events"
 	usecases "github.com/lopesgabriel/tellawl/services/wallet/internal/use-cases"
+	lognoop "go.opentelemetry.io/otel/log/noop"
+	tracenoop "go.opentelemetry.io/otel/trace/noop"
 )
 
 func TestWalletCreation(t *testing.T) {
-	publisher := events.InMemoryEventPublisher{}
+	appLogger, err := logger.Init(t.Context(), logger.InitLoggerArgs{
+		LoggerProvider: lognoop.NewLoggerProvider(),
+	})
+	if err != nil {
+		t.Fatalf("Failed to initialize logger: %v", err)
+	}
+	defer appLogger.Shutdown(t.Context())
+
+	publisher := events.NewInMemoryEventPublisher(appLogger)
 	repos := repository.NewInMemory(publisher)
+	memberRepo := inmemory.NewInMemoryMemberRepository(publisher)
+	repos.Member = memberRepo
+
 	useCases := usecases.NewUseCases(usecases.NewUseCasesArgs{
-		JwtSecret: "examle",
-		Repos:     repos,
+		Repos:  repos,
+		Tracer: tracenoop.NewTracerProvider().Tracer("test"),
+		Logger: appLogger,
 	})
 
 	userId := uuid.NewString()
@@ -27,7 +43,7 @@ func TestWalletCreation(t *testing.T) {
 		Email:     "example@example.com",
 		CreatedAt: time.Now(),
 	}
-	repos.User.Save(t.Context(), &user)
+	memberRepo.Items = append(memberRepo.Items, user)
 
 	wallet, err := useCases.CreateWallet(t.Context(), usecases.CreateWalletUseCaseInput{
 		CreatorID: userId,

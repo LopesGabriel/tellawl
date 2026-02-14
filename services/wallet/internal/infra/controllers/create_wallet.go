@@ -5,8 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/lopesgabriel/tellawl/packages/logger"
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/models"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/controllers/presenter"
 	usecases "github.com/lopesgabriel/tellawl/services/wallet/internal/use-cases"
 )
@@ -15,27 +14,19 @@ type createWalletRequest struct {
 	WalletName string `json:"name"`
 }
 
-func (handler *APIHandler) HandleCreateWallet(w http.ResponseWriter, r *http.Request) {
-	ctx, span := handler.tracer.Start(r.Context(), "HandleCreateWallet")
+func (h *APIHandler) HandleCreateWallet(w http.ResponseWriter, r *http.Request) {
+	ctx, span := h.tracer.Start(r.Context(), "HandleCreateWallet")
 	defer span.End()
 
-	claims := r.Context().Value(userContextKey).(jwt.MapClaims)
-	creatorId, err := claims.GetSubject()
-	if err != nil {
-		logger.Error(ctx, "Could not get token subject", slog.String("error", err.Error()))
-		WriteError(w, http.StatusInternalServerError, map[string]any{
-			"message": "Could not get token subject",
-			"error":   err.Error(),
-		})
-		return
-	}
+	member := r.Context().Value(memberContextKey).(*models.Member)
+	creatorId := member.Id
 
 	var data createWalletRequest
 	// Read the requst body
-	err = json.NewDecoder(r.Body).Decode(&data)
+	err := json.NewDecoder(r.Body).Decode(&data)
 	defer r.Body.Close()
 	if err != nil {
-		logger.Error(ctx, "Could not decode the request body", slog.String("error", err.Error()))
+		h.logger.Error(ctx, "Could not decode the request body", slog.String("error", err.Error()))
 		WriteError(w, http.StatusBadRequest, map[string]any{
 			"message": "Could not parse the request body, are you sending a JSON?",
 			"error":   err.Error(),
@@ -43,12 +34,12 @@ func (handler *APIHandler) HandleCreateWallet(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	wallet, err := handler.usecases.CreateWallet(ctx, usecases.CreateWalletUseCaseInput{
+	wallet, err := h.usecases.CreateWallet(ctx, usecases.CreateWalletUseCaseInput{
 		CreatorID: creatorId,
 		Name:      data.WalletName,
 	})
 	if err != nil {
-		logger.Error(ctx, "Could not create the wallet", slog.String("error", err.Error()))
+		h.logger.Error(ctx, "Could not create the wallet", slog.String("error", err.Error()))
 		WriteError(w, http.StatusBadRequest, map[string]any{
 			"message": "Could not create the wallet",
 			"error":   err.Error(),

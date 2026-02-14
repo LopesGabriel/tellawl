@@ -22,7 +22,7 @@ func (usecase *UseCase) CreateWallet(ctx context.Context, input CreateWalletUseC
 		return nil, errx.MissingRequiredFieldsError("Name")
 	}
 
-	creator, err := usecase.repos.User.FindByID(ctx, input.CreatorID)
+	creator, err := usecase.repos.Member.FindByID(ctx, input.CreatorID)
 	if err != nil {
 		return nil, errors.Join(errors.New("could not find creator id"), err)
 	}

@@ -25,7 +25,7 @@ func (usecase *UseCase) RegisterTransaction(ctx context.Context, input RegisterT
 		return nil, errx.ErrInvalidTransactionType
 	}
 
-	user, err := usecase.repos.User.FindByID(ctx, input.TransactionRegisteredByUserId)
+	user, err := usecase.repos.Member.FindByID(ctx, input.TransactionRegisteredByUserId)
 	if err != nil {
 		return nil, err
 	}

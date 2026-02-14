@@ -112,5 +112,8 @@ func (l *AppLogger) Fatal(ctx context.Context, message string, args ...any) {
 }
 
 func (l *AppLogger) Shutdown(ctx context.Context) error {
-	return l.loggerProvider.(*sdkLog.LoggerProvider).Shutdown(ctx)
+	if sdkProvider, ok := l.loggerProvider.(*sdkLog.LoggerProvider); ok {
+		return sdkProvider.Shutdown(ctx)
+	}
+	return nil
 }

@@ -4,28 +4,42 @@ import (
 	"testing"
 	"time"
 
+	"github.com/lopesgabriel/tellawl/packages/logger"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/models"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/repository"
+	inmemory "github.com/lopesgabriel/tellawl/services/wallet/internal/infra/database/in_memory"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/events"
 	usecases "github.com/lopesgabriel/tellawl/services/wallet/internal/use-cases"
+	lognoop "go.opentelemetry.io/otel/log/noop"
+	tracenoop "go.opentelemetry.io/otel/trace/noop"
 )
 
 func TestListUserWalletsUseCase(t *testing.T) {
-	var repos *repository.Repositories
-	eventPublisher := &events.InMemoryEventPublisher{}
+	appLogger, err := logger.Init(t.Context(), logger.InitLoggerArgs{
+		LoggerProvider: lognoop.NewLoggerProvider(),
+	})
+	if err != nil {
+		t.Fatalf("Failed to initialize logger: %v", err)
+	}
+	defer appLogger.Shutdown(t.Context())
+
+	eventPublisher := events.NewInMemoryEventPublisher(appLogger)
 
 	t.Run("should list user wallets", func(t *testing.T) {
-		repos = repository.NewInMemory(eventPublisher)
+		repos := repository.NewInMemory(eventPublisher)
+		memberRepo := inmemory.NewInMemoryMemberRepository(eventPublisher)
+		repos.Member = memberRepo
 		useCases := usecases.NewUseCases(usecases.NewUseCasesArgs{
-			JwtSecret: "example",
-			Repos:     repos,
+			Repos:  repos,
+			Tracer: tracenoop.NewTracerProvider().Tracer("test"),
+			Logger: appLogger,
 		})
 
 		user := createMember("user1", "Gabriel", "Lopes", "gabriel@example.com")
 		user2 := createMember("user2", "Matheus", "Lopes", "matheus@example.com")
 
-		repos.User.Save(t.Context(), user)
-		repos.User.Save(t.Context(), user2)
+		memberRepo.Items = append(memberRepo.Items, *user)
+		memberRepo.Items = append(memberRepo.Items, *user2)
 
 		wallet := models.CreateNewWallet("Test wallet", user)
 		wallet.AddUser(user2)

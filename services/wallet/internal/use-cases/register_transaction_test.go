@@ -3,27 +3,40 @@ package usecases_test
 import (
 	"testing"
 
+	"github.com/lopesgabriel/tellawl/packages/logger"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/errx"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/models"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/repository"
+	inmemory "github.com/lopesgabriel/tellawl/services/wallet/internal/infra/database/in_memory"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/events"
 	usecases "github.com/lopesgabriel/tellawl/services/wallet/internal/use-cases"
+	lognoop "go.opentelemetry.io/otel/log/noop"
+	tracenoop "go.opentelemetry.io/otel/trace/noop"
 )
 
 func TestRegisterTransactionUseCase(t *testing.T) {
-	var repos *repository.Repositories
-	eventPublisher := &events.InMemoryEventPublisher{}
-	useCaseArgs := usecases.NewUseCasesArgs{
-		JwtSecret: "example",
-		Repos:     repos,
+	appLogger, err := logger.Init(t.Context(), logger.InitLoggerArgs{
+		LoggerProvider: lognoop.NewLoggerProvider(),
+	})
+	if err != nil {
+		t.Fatalf("Failed to initialize logger: %v", err)
 	}
+	defer appLogger.Shutdown(t.Context())
+
+	eventPublisher := events.NewInMemoryEventPublisher(appLogger)
+	repos := repository.NewInMemory(eventPublisher)
+	memberRepo := inmemory.NewInMemoryMemberRepository(eventPublisher)
+	repos.Member = memberRepo
 
 	t.Run("should register a transaction", func(t *testing.T) {
-		repos = repository.NewInMemory(eventPublisher)
-		useCases := usecases.NewUseCases(useCaseArgs)
+		useCases := usecases.NewUseCases(usecases.NewUseCasesArgs{
+			Repos:  repos,
+			Tracer: tracenoop.NewTracerProvider().Tracer("test"),
+			Logger: appLogger,
+		})
 
 		user := createMember("member1", "Matheus", "Lopes", "matheus@example.com")
-		repos.User.Save(t.Context(), user)
+		memberRepo.Items = append(memberRepo.Items, *user)
 
 		wallet := models.CreateNewWallet("Test wallet", user)
 		repos.Wallet.Save(t.Context(), wallet)
@@ -62,11 +75,17 @@ func TestRegisterTransactionUseCase(t *testing.T) {
 	})
 
 	t.Run("should register a transaction with custom offset", func(t *testing.T) {
-		repos = repository.NewInMemory(eventPublisher)
-		useCases := usecases.NewUseCases(useCaseArgs)
+		repos := repository.NewInMemory(eventPublisher)
+		memberRepo := inmemory.NewInMemoryMemberRepository(eventPublisher)
+		repos.Member = memberRepo
+		useCases := usecases.NewUseCases(usecases.NewUseCasesArgs{
+			Repos:  repos,
+			Tracer: tracenoop.NewTracerProvider().Tracer("test"),
+			Logger: appLogger,
+		})
 
 		user := createMember("member1", "Matheus", "Lopes", "matheus@example.com")
-		repos.User.Save(t.Context(), user)
+		memberRepo.Items = append(memberRepo.Items, *user)
 
 		wallet := models.CreateNewWallet("Test wallet", user)
 		repos.Wallet.Save(t.Context(), wallet)
@@ -106,13 +125,19 @@ func TestRegisterTransactionUseCase(t *testing.T) {
 	})
 
 	t.Run("User with no access should not register a transaction", func(t *testing.T) {
-		repos = repository.NewInMemory(eventPublisher)
-		useCases := usecases.NewUseCases(useCaseArgs)
+		repos := repository.NewInMemory(eventPublisher)
+		memberRepo := inmemory.NewInMemoryMemberRepository(eventPublisher)
+		repos.Member = memberRepo
+		useCases := usecases.NewUseCases(usecases.NewUseCasesArgs{
+			Repos:  repos,
+			Tracer: tracenoop.NewTracerProvider().Tracer("test"),
+			Logger: appLogger,
+		})
 
 		user := createMember("member1", "Gabriel", "Lopes", "gabriel@example.com")
 		user2 := createMember("member2", "Matheus", "Lopes", "matheus@example.com")
-		repos.User.Save(t.Context(), user)
-		repos.User.Save(t.Context(), user2)
+		memberRepo.Items = append(memberRepo.Items, *user)
+		memberRepo.Items = append(memberRepo.Items, *user2)
 
 		wallet := models.CreateNewWallet("Test wallet", user)
 		repos.Wallet.Save(t.Context(), wallet)
@@ -145,13 +170,19 @@ func TestRegisterTransactionUseCase(t *testing.T) {
 	})
 
 	t.Run("User with access should be able to register a transaction", func(t *testing.T) {
-		repos = repository.NewInMemory(eventPublisher)
-		useCases := usecases.NewUseCases(useCaseArgs)
+		repos := repository.NewInMemory(eventPublisher)
+		memberRepo := inmemory.NewInMemoryMemberRepository(eventPublisher)
+		repos.Member = memberRepo
+		useCases := usecases.NewUseCases(usecases.NewUseCasesArgs{
+			Repos:  repos,
+			Tracer: tracenoop.NewTracerProvider().Tracer("test"),
+			Logger: appLogger,
+		})
 
 		user := createMember("member1", "Gabriel", "Lopes", "gabriel@example.com")
 		user2 := createMember("member2", "Matheus", "Lopes", "matheus@example.com")
-		repos.User.Save(t.Context(), user)
-		repos.User.Save(t.Context(), user2)
+		memberRepo.Items = append(memberRepo.Items, *user)
+		memberRepo.Items = append(memberRepo.Items, *user2)
 
 		wallet := models.CreateNewWallet("Test wallet", user)
 		repos.Wallet.Save(t.Context(), wallet)

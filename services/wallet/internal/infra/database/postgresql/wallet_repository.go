@@ -3,32 +3,37 @@ package postgresql
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"log/slog"
 	"time"
 
 	"github.com/lopesgabriel/tellawl/packages/tracing"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/models"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/ports"
+	repohttp "github.com/lopesgabriel/tellawl/services/wallet/internal/infra/database/http"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 )
 
 type PostgreSQLWalletRepository struct {
-	db        *sql.DB
-	publisher ports.EventPublisher
-	tracer    trace.Tracer
+	db         *sql.DB
+	publisher  ports.EventPublisher
+	memberRepo *repohttp.HTTPMemberRepository
+	tracer     trace.Tracer
 }
 
-func NewPostgreSQLWalletRepository(db *sql.DB, publisher ports.EventPublisher) *PostgreSQLWalletRepository {
+func NewPostgreSQLWalletRepository(db *sql.DB, publisher ports.EventPublisher, memberRepo *repohttp.HTTPMemberRepository) *PostgreSQLWalletRepository {
 	return &PostgreSQLWalletRepository{
-		db:        db,
-		publisher: publisher,
-		tracer:    tracing.GetTracer("wallet"),
+		db:         db,
+		publisher:  publisher,
+		memberRepo: memberRepo,
+		tracer:     tracing.GetTracer("github.com/lopesgabriel/tellawl/services/wallet/internal/infra/database/postgresql/PostgreSQLWalletRepository"),
 	}
 }
 
 func (r *PostgreSQLWalletRepository) FindById(ctx context.Context, id string) (*models.Wallet, error) {
-	ctx, span := r.tracer.Start(ctx, "PostgreSQLWalletRepository.FindByID")
+	ctx, span := r.tracer.Start(ctx, "FindByID")
 	defer span.End()
 
 	query := `SELECT id, creator_id, name, balance_value, balance_offset, created_at, updated_at 
@@ -79,17 +84,18 @@ func (r *PostgreSQLWalletRepository) FindById(ctx context.Context, id string) (*
 }
 
 func (r *PostgreSQLWalletRepository) FindByUserId(ctx context.Context, userId string) ([]models.Wallet, error) {
-	ctx, span := r.tracer.Start(ctx, "PostgreSQLWalletRepository.FindByUserId")
+	ctx, span := r.tracer.Start(ctx, "FindByUserId")
 	defer span.End()
 
 	query := `SELECT DISTINCT w.id, w.creator_id, w.name, w.balance_value, w.balance_offset, w.created_at, w.updated_at 
 			  FROM wallets w 
 			  JOIN wallet_users wu ON w.id = wu.wallet_id 
-			  WHERE wu.user_id = $1`
+			  WHERE wu.member_id = $1`
 
 	rows, err := r.db.QueryContext(ctx, query, userId)
 	if err != nil {
 		span.SetStatus(codes.Error, err.Error())
+		span.RecordError(err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -112,6 +118,7 @@ func (r *PostgreSQLWalletRepository) FindByUserId(ctx context.Context, userId st
 
 		if err != nil {
 			span.SetStatus(codes.Error, err.Error())
+			span.RecordError(err)
 			return nil, err
 		}
 
@@ -127,12 +134,13 @@ func (r *PostgreSQLWalletRepository) FindByUserId(ctx context.Context, userId st
 }
 
 func (r *PostgreSQLWalletRepository) Save(ctx context.Context, wallet *models.Wallet) error {
-	ctx, span := tracing.Tracer.Start(ctx, "PostgreSQLWalletRepository.Save")
+	ctx, span := r.tracer.Start(ctx, "Save")
 	defer span.End()
 
 	tx, err := r.db.Begin()
 	if err != nil {
 		span.SetStatus(codes.Error, err.Error())
+		span.RecordError(err)
 		return err
 	}
 	defer tx.Rollback()
@@ -160,6 +168,7 @@ func (r *PostgreSQLWalletRepository) Save(ctx context.Context, wallet *models.Wa
 
 	if err != nil {
 		span.SetStatus(codes.Error, err.Error())
+		span.RecordError(err)
 		return err
 	}
 
@@ -167,6 +176,7 @@ func (r *PostgreSQLWalletRepository) Save(ctx context.Context, wallet *models.Wa
 	err = r.syncWalletMembers(ctx, tx, wallet.Id, wallet.Members)
 	if err != nil {
 		span.SetStatus(codes.Error, err.Error())
+		span.RecordError(err)
 		return err
 	}
 
@@ -186,6 +196,7 @@ func (r *PostgreSQLWalletRepository) Save(ctx context.Context, wallet *models.Wa
 		)
 		if err != nil {
 			span.SetStatus(codes.Error, err.Error())
+			span.RecordError(err)
 			return err
 		}
 	}
@@ -193,6 +204,7 @@ func (r *PostgreSQLWalletRepository) Save(ctx context.Context, wallet *models.Wa
 	err = tx.Commit()
 	if err != nil {
 		span.SetStatus(codes.Error, err.Error())
+		span.RecordError(err)
 		return err
 	}
 
@@ -206,13 +218,19 @@ func (r *PostgreSQLWalletRepository) Save(ctx context.Context, wallet *models.Wa
 }
 
 func (r *PostgreSQLWalletRepository) loadWalletMembers(ctx context.Context, walletId string) ([]models.Member, error) {
-	query := `SELECT u.id, u.first_name, u.last_name, u.email, u.hashed_password, u.created_at, u.updated_at
-			  FROM users u
-			  JOIN wallet_users wu ON u.id = wu.user_id
+	ctx, span := r.tracer.Start(ctx, "loadWalletMembers", trace.WithAttributes(
+		attribute.String("wallet.id", walletId),
+	))
+	defer span.End()
+
+	query := `SELECT wu.member_id
+			  FROM wallet_users wu
 			  WHERE wu.wallet_id = $1`
 
 	rows, err := r.db.QueryContext(ctx, query, walletId)
 	if err != nil {
+		span.SetStatus(codes.Error, "query failed")
+		span.RecordError(err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -221,25 +239,39 @@ func (r *PostgreSQLWalletRepository) loadWalletMembers(ctx context.Context, wall
 
 	for rows.Next() {
 		var user models.Member
-		var updatedAt sql.NullTime
 
 		err := rows.Scan(
 			&user.Id,
-			&user.FirstName,
-			&user.LastName,
-			&user.Email,
-			&user.HashedPassword,
-			&user.CreatedAt,
-			&updatedAt,
 		)
-
 		if err != nil {
+			span.SetStatus(codes.Error, "query failed")
+			span.RecordError(err)
 			return nil, err
 		}
 
-		if updatedAt.Valid {
-			user.UpdatedAt = &updatedAt.Time
+		span.AddEvent(fmt.Sprintf("Retrieving data for user %s", user.Id), trace.WithAttributes(
+			attribute.String("user.id", user.Id),
+		))
+
+		userData, err := r.memberRepo.FindByID(ctx, user.Id)
+		if err != nil {
+			span.SetStatus(codes.Error, "failed to get member data")
+			span.RecordError(err)
+			return nil, err
 		}
+
+		user.FirstName = userData.FirstName
+		user.LastName = userData.LastName
+		user.Email = userData.Email
+		user.CreatedAt = userData.CreatedAt
+		if userData.UpdatedAt != nil {
+			user.UpdatedAt = userData.UpdatedAt
+		}
+
+		span.AddEvent(fmt.Sprintf("User data retrieved for user %s", user.Id), trace.WithAttributes(
+			attribute.String("user.id", user.Id),
+			attribute.String("user.email", user.Email),
+		))
 
 		users = append(users, user)
 	}
@@ -248,14 +280,19 @@ func (r *PostgreSQLWalletRepository) loadWalletMembers(ctx context.Context, wall
 }
 
 func (r *PostgreSQLWalletRepository) loadWalletTransactions(ctx context.Context, walletId string) ([]models.Transaction, error) {
-	query := `SELECT t.id, t.amount_value, t.amount_offset, t.type, t.description, t.created_at,
-                    u.id as user_id, u.first_name, u.last_name, u.email
+	ctx, span := r.tracer.Start(ctx, "loadWalletTransactions", trace.WithAttributes(
+		attribute.String("wallet.id", walletId),
+	))
+	defer span.End()
+
+	query := `SELECT t.id, t.amount_value, t.amount_offset, t.type, t.description, t.created_at, t.created_by
 			  FROM transactions t
-			  JOIN users u ON t.created_by = u.id 
 			  WHERE t.wallet_id = $1
 			  ORDER BY t.created_at DESC`
 	rows, err := r.db.QueryContext(ctx, query, walletId)
 	if err != nil {
+		span.SetStatus(codes.Error, "query failed")
+		span.RecordError(err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -274,14 +311,36 @@ func (r *PostgreSQLWalletRepository) loadWalletTransactions(ctx context.Context,
 			&transaction.Description,
 			&transaction.CreatedAt,
 			&user.Id,
-			&user.FirstName,
-			&user.LastName,
-			&user.Email,
 		)
-
 		if err != nil {
+			span.SetStatus(codes.Error, "scan failed")
+			span.RecordError(err)
 			return nil, err
 		}
+
+		span.AddEvent(fmt.Sprintf("Retrieving data for user %s", user.Id), trace.WithAttributes(
+			attribute.String("user.id", user.Id),
+		))
+
+		userData, err := r.memberRepo.FindByID(ctx, user.Id)
+		if err != nil {
+			span.SetStatus(codes.Error, "failed to retrieve user data")
+			span.RecordError(err)
+			return nil, err
+		}
+
+		user.FirstName = userData.FirstName
+		user.LastName = userData.LastName
+		user.Email = userData.Email
+		user.CreatedAt = userData.CreatedAt
+		if userData.UpdatedAt != nil {
+			user.UpdatedAt = userData.UpdatedAt
+		}
+
+		span.AddEvent(fmt.Sprintf("User data retrieved for user %s", user.Id), trace.WithAttributes(
+			attribute.String("user.id", user.Id),
+			attribute.String("user.email", user.Email),
+		))
 
 		transaction.CreatedBy = user
 		transactions = append(transactions, transaction)
@@ -291,9 +350,15 @@ func (r *PostgreSQLWalletRepository) loadWalletTransactions(ctx context.Context,
 }
 
 func (r *PostgreSQLWalletRepository) syncWalletMembers(ctx context.Context, tx *sql.Tx, walletId string, users []models.Member) error {
+	ctx, span := r.tracer.Start(ctx, "syncWalletMembers", trace.WithAttributes(
+		attribute.String("wallet.id", walletId),
+	))
+	defer span.End()
 	// Get current user IDs
-	rows, err := tx.QueryContext(ctx, "SELECT user_id FROM wallet_users WHERE wallet_id = $1", walletId)
+	rows, err := tx.QueryContext(ctx, "SELECT member_id FROM wallet_users WHERE wallet_id = $1", walletId)
 	if err != nil {
+		span.SetStatus(codes.Error, "failed to query current users")
+		span.RecordError(err)
 		return err
 	}
 	defer rows.Close()
@@ -302,6 +367,8 @@ func (r *PostgreSQLWalletRepository) syncWalletMembers(ctx context.Context, tx *
 	for rows.Next() {
 		var userId string
 		if err := rows.Scan(&userId); err != nil {
+			span.SetStatus(codes.Error, "failed to scan current users")
+			span.RecordError(err)
 			return err
 		}
 		currentUsers[userId] = true
@@ -316,8 +383,10 @@ func (r *PostgreSQLWalletRepository) syncWalletMembers(ctx context.Context, tx *
 	// Remove users not in new set
 	for userId := range currentUsers {
 		if !newUsers[userId] {
-			_, err = tx.ExecContext(ctx, "DELETE FROM wallet_users WHERE wallet_id = $1 AND user_id = $2", walletId, userId)
+			_, err = tx.ExecContext(ctx, "DELETE FROM wallet_users WHERE wallet_id = $1 AND member_id = $2", walletId, userId)
 			if err != nil {
+				span.SetStatus(codes.Error, "failed to remove old users")
+				span.RecordError(err)
 				return err
 			}
 		}
@@ -326,8 +395,10 @@ func (r *PostgreSQLWalletRepository) syncWalletMembers(ctx context.Context, tx *
 	// Add new users
 	for userId := range newUsers {
 		if !currentUsers[userId] {
-			_, err = tx.ExecContext(ctx, "INSERT INTO wallet_users (wallet_id, user_id, assigned_at) VALUES ($1, $2, $3)", walletId, userId, time.Now())
+			_, err = tx.ExecContext(ctx, "INSERT INTO wallet_users (wallet_id, member_id, assigned_at) VALUES ($1, $2, $3)", walletId, userId, time.Now())
 			if err != nil {
+				span.SetStatus(codes.Error, "failed to add new users")
+				span.RecordError(err)
 				return err
 			}
 		}

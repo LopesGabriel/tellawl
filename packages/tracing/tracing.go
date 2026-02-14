@@ -2,9 +2,9 @@ package tracing
 
 import (
 	"context"
-	"fmt"
 
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
 	traceSdk "go.opentelemetry.io/otel/sdk/trace"
 	trace "go.opentelemetry.io/otel/trace"
 )
@@ -15,8 +15,6 @@ type NewTraceProviderArgs struct {
 	ServiceNamespace string
 	ServiceVersion   string
 }
-
-var Tracer trace.Tracer
 
 func Init(ctx context.Context, args NewTraceProviderArgs) (*traceSdk.TracerProvider, error) {
 	exporter, err := newExporter(ctx, args)
@@ -29,15 +27,14 @@ func Init(ctx context.Context, args NewTraceProviderArgs) (*traceSdk.TracerProvi
 		return nil, err
 	}
 
+	otel.SetTextMapPropagator(propagation.TraceContext{})
 	return traceProvider, nil
 }
 
 func GetTracer(serviceName string) trace.Tracer {
-	if Tracer == nil {
-		Tracer = otel.Tracer(
-			fmt.Sprintf("github.com/lopesgabriel/tellawl/service/%s", serviceName),
-		)
+	if serviceName == "" {
+		return otel.Tracer("github.com/lopesgabriel/tellawl")
 	}
 
-	return Tracer
+	return otel.Tracer(serviceName)
 }

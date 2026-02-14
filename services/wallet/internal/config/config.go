@@ -13,6 +13,7 @@ type AppConfiguration struct {
 	Version          string
 	Port             int
 	DatabaseUrl      string
+	MemberServiceUrl string
 	MigrationUrl     string
 	OTELCollectorUrl string
 	ServiceName      string
@@ -50,6 +51,7 @@ func InitAppConfigurations() *AppConfiguration {
 		Version:          os.Getenv("VERSION"),
 		Port:             port,
 		DatabaseUrl:      os.Getenv("POSTGRESQL_URL"),
+		MemberServiceUrl: os.Getenv("MEMBER_SERVICE_URL"),
 		MigrationUrl:     os.Getenv("MIGRATIONS_URL"),
 		OTELCollectorUrl: os.Getenv("OTEL_COLLECTOR_URL"),
 		ServiceName:      serviceName,

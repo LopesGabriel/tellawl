@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 
 	"github.com/lopesgabriel/tellawl/packages/logger"
@@ -28,16 +29,24 @@ func main() {
 		panic(err)
 	}
 
-	tracer := tracing.GetTracer(configuration.ServiceName)
+	tracer := tracing.GetTracer(
+		fmt.Sprintf("github.com/lopesgabriel/tellawl/service/%s", configuration.ServiceName),
+	)
 	publisher := inmemoryevents.InitInMemoryEventPublisher()
 	repos := repository.NewInMemory(publisher)
 	usecases := uc.InitUseCases(uc.InitUseCasesArgs{
 		JwtSecret: configuration.JwtSecret,
 		Repos:     repos,
-		Tracer:    tracer,
+		Tracer:    tracing.GetTracer("github.com/lopesgabriel/tellawl/services/member-service/internal/use_cases"),
 		Logger:    appLogger,
 	})
-	api := api.NewApiHandler(usecases, configuration.Version, tracer, appLogger)
+	api := api.NewApiHandler(api.NewAPiArgs{
+		Repositories: repos,
+		Usecases:     usecases,
+		Version:      configuration.Version,
+		Tracer:       tracer,
+		Logger:       appLogger,
+	})
 	err = api.Listen(ctx, configuration.Port)
 	if err != nil {
 		panic(err)

@@ -1,22 +1,27 @@
 package usecases
 
 import (
+	"github.com/lopesgabriel/tellawl/packages/logger"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/repository"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type UseCase struct {
-	jwtSecret string
-	repos     *repository.Repositories
+	repos  *repository.Repositories
+	tracer trace.Tracer
+	logger *logger.AppLogger
 }
 
 type NewUseCasesArgs struct {
-	JwtSecret string
-	Repos     *repository.Repositories
+	Logger *logger.AppLogger
+	Repos  *repository.Repositories
+	Tracer trace.Tracer
 }
 
 func NewUseCases(args NewUseCasesArgs) *UseCase {
 	return &UseCase{
-		jwtSecret: args.JwtSecret,
-		repos:     args.Repos,
+		repos:  args.Repos,
+		tracer: args.Tracer,
+		logger: args.Logger,
 	}
 }

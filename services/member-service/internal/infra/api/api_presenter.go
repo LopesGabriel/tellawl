@@ -25,3 +25,13 @@ func toMemberAPIResponse(member *models.Member) MemberAPIResponse {
 		UpdatedAt: member.UpdatedAt,
 	}
 }
+
+func toMembersAPIResponse(members []models.Member) []MemberAPIResponse {
+	response := make([]MemberAPIResponse, len(members))
+
+	for i, member := range members {
+		response[i] = toMemberAPIResponse(&member)
+	}
+
+	return response
+}

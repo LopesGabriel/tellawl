@@ -1,5 +1,5 @@
 @hostname = localhost
-@port = 8080
+@port = 8081
 @host = {{hostname}}:{{port}}
 @contentType = application/json
 @jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTgwNzg4NDcsImlzcyI6ImNvbS50ZWxsYXcuYmFuayIsInN1YiI6IjM2ZjJmOWJhLTE4Y2ItNGJlOC05YmU1LTU5Mjg1MzIyM2FjMSJ9.NGENIcz_1M5fBNAhW_OGnwwu2UTGZ9udnbL-Bh0khkw
@@ -7,12 +7,12 @@
 ###
 
 ### Health Check
-GET http://{{host}}/health
+GET http://{{host}}/internal/health
 
 ###
 
 ### Sign Up - Create new user
-POST http://{{host}}/signup
+POST http://{{host}}/public/signup
 Content-Type: {{contentType}}
 
 {
@@ -25,7 +25,7 @@ Content-Type: {{contentType}}
 ###
 
 ### Sign In - Generates a jwt token
-POST http://{{host}}/signin
+POST http://{{host}}/public/signin
 Content-Type: {{contentType}}
 
 {
@@ -37,7 +37,7 @@ Content-Type: {{contentType}}
 
 ### Refresh Token - Generates new jwt token
 # @prompt refreshToken Your refresh token
-POST http://{{host}}/refresh-token
+POST http://{{host}}/public/refresh-token
 Content-Type: {{contentType}}
 Authorization: Bearer {{refreshToken}}
 
@@ -45,6 +45,17 @@ Authorization: Bearer {{refreshToken}}
 
 ### Get current user
 # @prompt token Your token
-GET http://{{host}}/me
-Content-Type: {{contentType}}
+GET http://{{host}}/public/me
 Authorization: Bearer {{token}}
+
+###
+
+### Get members list (Internal)
+# @prompt email The email to filter members by (optional)
+GET http://{{host}}/internal/members?email={{email}}
+
+###
+
+### Get member by ID (Internal)
+# @prompt memberID The member ID to retrieve
+GET http://{{host}}/internal/members/{{memberID}}

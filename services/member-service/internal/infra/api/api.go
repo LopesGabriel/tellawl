@@ -2,28 +2,41 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
 
 	"github.com/lopesgabriel/tellawl/packages/logger"
+	"github.com/lopesgabriel/tellawl/services/member-service/internal/domain/repository"
 	usecases "github.com/lopesgabriel/tellawl/services/member-service/internal/use_cases"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 )
 
 type apiHandler struct {
-	usecases *usecases.UseCases
-	version  string
-	tracer   trace.Tracer
-	logger   *logger.AppLogger
+	repositories *repository.Repositories
+	usecases     *usecases.UseCases
+	version      string
+	tracer       trace.Tracer
+	logger       *logger.AppLogger
 }
 
-func NewApiHandler(usecases *usecases.UseCases, version string, tracer trace.Tracer, logger *logger.AppLogger) *apiHandler {
+type NewAPiArgs struct {
+	Repositories *repository.Repositories
+	Usecases     *usecases.UseCases
+	Version      string
+	Tracer       trace.Tracer
+	Logger       *logger.AppLogger
+}
+
+func NewApiHandler(args NewAPiArgs) *apiHandler {
 	return &apiHandler{
-		usecases: usecases,
-		version:  version,
-		tracer:   tracer,
-		logger:   logger,
+		repositories: args.Repositories,
+		usecases:     args.Usecases,
+		version:      args.Version,
+		tracer:       args.Tracer,
+		logger:       args.Logger,
 	}
 }
 
@@ -42,4 +55,18 @@ func (handler *apiHandler) requestInterceptorMiddleware(next http.Handler) http.
 		)
 		next.ServeHTTP(w, r)
 	})
+}
+
+func (handler *apiHandler) HandleHealthCheck(w http.ResponseWriter, r *http.Request) {
+	_, span := handler.tracer.Start(r.Context(), "HandleHealthCheck")
+	defer span.End()
+
+	result, _ := json.Marshal(map[string]string{
+		"api": "OK",
+	})
+
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(result)
+	span.SetStatus(codes.Ok, "OK")
 }
