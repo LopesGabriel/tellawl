@@ -2,12 +2,14 @@ package api
 
 import (
 	"github.com/gorilla/mux"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux"
 )
 
 func (h *apiHandler) setupRoutes() *mux.Router {
 	router := mux.NewRouter()
 
 	router.Use(h.requestInterceptorMiddleware)
+	router.Use(otelmux.Middleware("member-service"))
 
 	// Health check route
 	router.HandleFunc("/internal/health", h.HandleHealthCheck).Methods("GET")
