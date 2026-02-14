@@ -9,6 +9,7 @@ import (
 
 type RegisterTransactionUseCaseInput struct {
 	TransactionRegisteredByUserId string
+	TransactionRegisteredByUser   *models.Member
 	WalletId                      string
 	Amount                        int
 	Offset                        int
@@ -25,9 +26,15 @@ func (usecase *UseCase) RegisterTransaction(ctx context.Context, input RegisterT
 		return nil, errx.ErrInvalidTransactionType
 	}
 
-	user, err := usecase.repos.Member.FindByID(ctx, input.TransactionRegisteredByUserId)
-	if err != nil {
-		return nil, err
+	var user *models.Member
+	if input.TransactionRegisteredByUser != nil {
+		user = input.TransactionRegisteredByUser
+	} else {
+		member, err := usecase.repos.Member.FindByID(ctx, input.TransactionRegisteredByUserId)
+		if err != nil {
+			return nil, err
+		}
+		user = member
 	}
 
 	wallet, err := usecase.repos.Wallet.FindById(ctx, input.WalletId)

@@ -55,6 +55,7 @@ func (h *APIHandler) HandleRegisterTransaction(w http.ResponseWriter, r *http.Re
 	)
 	transaction, err := h.usecases.RegisterTransaction(ctx, usecases.RegisterTransactionUseCaseInput{
 		TransactionRegisteredByUserId: creatorId,
+		TransactionRegisteredByUser:   member,
 		WalletId:                      walletId,
 		Amount:                        data.Amount,
 		Offset:                        data.Offset,

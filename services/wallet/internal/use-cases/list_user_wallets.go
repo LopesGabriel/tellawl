@@ -9,12 +9,19 @@ import (
 
 type ListUserWalletsUseCaseInput struct {
 	UserId string
+	Member *models.Member
 }
 
 func (usecase *UseCase) ListUserWallets(ctx context.Context, input ListUserWalletsUseCaseInput) ([]models.Wallet, error) {
-	user, err := usecase.repos.Member.FindByID(ctx, input.UserId)
-	if err != nil {
-		return nil, errx.ErrInvalidCreatorID
+	var user *models.Member
+	if input.Member == nil {
+		member, err := usecase.repos.Member.FindByID(ctx, input.UserId)
+		if err != nil {
+			return nil, errx.ErrInvalidCreatorID
+		}
+		user = member
+	} else {
+		user = input.Member
 	}
 
 	userWallets, err := usecase.repos.Wallet.FindByUserId(ctx, user.Id)

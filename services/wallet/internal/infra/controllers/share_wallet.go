@@ -49,6 +49,7 @@ func (h *APIHandler) HandleShareWallet(w http.ResponseWriter, r *http.Request) {
 
 	wallet, err := h.usecases.ShareWallet(ctx, usecases.ShareWalletUseCaseInput{
 		WalletCreatorId: creatorId,
+		WalletCreator:   member,
 		WalletId:        walletId,
 		SharedUserEmail: data.UserEmail,
 	})

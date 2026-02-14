@@ -9,14 +9,22 @@ import (
 
 type ShareWalletUseCaseInput struct {
 	WalletCreatorId string
+	WalletCreator   *models.Member
 	WalletId        string
 	SharedUserEmail string
 }
 
 func (usecase *UseCase) ShareWallet(ctx context.Context, input ShareWalletUseCaseInput) (*models.Wallet, error) {
-	creatorUser, err := usecase.repos.Member.FindByID(ctx, input.WalletCreatorId)
-	if err != nil {
-		return nil, err
+	var creator *models.Member
+
+	if input.WalletCreator != nil {
+		creator = input.WalletCreator
+	} else {
+		creatorUser, err := usecase.repos.Member.FindByID(ctx, input.WalletCreatorId)
+		if err != nil {
+			return nil, err
+		}
+		creator = creatorUser
 	}
 
 	wallet, err := usecase.repos.Wallet.FindById(ctx, input.WalletId)
@@ -24,7 +32,7 @@ func (usecase *UseCase) ShareWallet(ctx context.Context, input ShareWalletUseCas
 		return nil, err
 	}
 
-	if wallet.CreatorId != creatorUser.Id {
+	if wallet.CreatorId != creator.Id {
 		return nil, errx.ErrInsufficientPermissions
 	}
 

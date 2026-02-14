@@ -20,6 +20,7 @@ func (h *APIHandler) HandleListUserWallets(w http.ResponseWriter, r *http.Reques
 	span.SetAttributes(attribute.String("member.id", member.Id))
 	wallets, err := h.usecases.ListUserWallets(ctx, usecases.ListUserWalletsUseCaseInput{
 		UserId: member.Id,
+		Member: member,
 	})
 	if err != nil {
 		h.logger.Error(ctx, "Could not list user wallets", slog.String("error", err.Error()))

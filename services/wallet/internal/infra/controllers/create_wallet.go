@@ -36,6 +36,7 @@ func (h *APIHandler) HandleCreateWallet(w http.ResponseWriter, r *http.Request) 
 
 	wallet, err := h.usecases.CreateWallet(ctx, usecases.CreateWalletUseCaseInput{
 		CreatorID: creatorId,
+		Creator:   member,
 		Name:      data.WalletName,
 	})
 	if err != nil {

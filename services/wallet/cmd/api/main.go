@@ -29,9 +29,6 @@ func main() {
 	}
 	defer shutdown()
 
-	tracer := tracing.GetTracer(
-		fmt.Sprintf("github.com/lopesgabriel/tellawl/service/%s", appConfig.ServiceName),
-	)
 	appLogger, err := logger.GetLogger()
 	if err != nil {
 		panic(err)
@@ -69,7 +66,7 @@ func main() {
 	useCases := usecases.NewUseCases(usecases.NewUseCasesArgs{
 		Repos:  repos,
 		Logger: appLogger,
-		Tracer: tracer,
+		Tracer: tracing.GetTracer("github.com/lopesgabriel/tellawl/service/wallet/internal/use-cases"),
 	})
 	apiHandler := controllers.NewAPIHandler(useCases, appConfig.Version)
 

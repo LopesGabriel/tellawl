@@ -10,6 +10,7 @@ import (
 	"github.com/lopesgabriel/tellawl/packages/logger"
 	"github.com/lopesgabriel/tellawl/packages/tracing"
 	usecases "github.com/lopesgabriel/tellawl/services/wallet/internal/use-cases"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -38,6 +39,7 @@ func (handler *APIHandler) registerEndpoints() *mux.Router {
 	router := mux.NewRouter()
 
 	router.Use(handler.requestInterceptorMiddleware)
+	router.Use(otelmux.Middleware("wallet"))
 
 	router.HandleFunc("/health", handler.HandleHealthCheck).Methods("GET")
 
