@@ -12,13 +12,13 @@ import (
 )
 
 type inMemoryMemberRepository struct {
-	items     []models.Member
+	items     map[string]models.Member
 	publisher events.EventPublisher
 }
 
 func InitInMemoryMemberRepository(publisher events.EventPublisher) *inMemoryMemberRepository {
 	return &inMemoryMemberRepository{
-		items:     []models.Member{},
+		items:     map[string]models.Member{},
 		publisher: publisher,
 	}
 }
@@ -26,14 +26,8 @@ func InitInMemoryMemberRepository(publisher events.EventPublisher) *inMemoryMemb
 func (r inMemoryMemberRepository) FindByID(ctx context.Context, id string) (*models.Member, error) {
 	var member models.Member
 
-	for _, u := range r.items {
-		if u.Id == id {
-			member = u
-			break
-		}
-	}
-
-	if member.Id == "" {
+	member, ok := r.items[id]
+	if !ok {
 		return nil, database.ErrNotFound
 	}
 
@@ -43,9 +37,9 @@ func (r inMemoryMemberRepository) FindByID(ctx context.Context, id string) (*mod
 func (r inMemoryMemberRepository) FindByEmail(ctx context.Context, email string) (*models.Member, error) {
 	var member models.Member
 
-	for _, u := range r.items {
-		if u.Email == email {
-			member = u
+	for _, m := range r.items {
+		if m.Email == email {
+			member = m
 			break
 		}
 	}
@@ -57,7 +51,7 @@ func (r inMemoryMemberRepository) FindByEmail(ctx context.Context, email string)
 	return &member, nil
 }
 
-func (r *inMemoryMemberRepository) Save(ctx context.Context, user *models.Member) error {
+func (r *inMemoryMemberRepository) Upsert(ctx context.Context, user *models.Member) error {
 	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
 	defer cancel()
 
@@ -65,11 +59,20 @@ func (r *inMemoryMemberRepository) Save(ctx context.Context, user *models.Member
 		user.Id = uuid.NewString()
 	}
 
+	existing, ok := r.items[user.Id]
+	if ok {
+		now := time.Now()
+		user.CreatedAt = existing.CreatedAt
+		user.UpdatedAt = &now
+		r.items[user.Id] = *user
+	} else {
+		r.items[user.Id] = *user
+	}
+
 	if err := r.publisher.Publish(ctx, user.Events()); err != nil {
 		slog.Error("error publishing events", slog.String("error", err.Error()))
 	}
 	user.ClearEvents()
 
-	r.items = append(r.items, *user)
 	return nil
 }

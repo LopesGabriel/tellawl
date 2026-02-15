@@ -63,7 +63,7 @@ func TestEmailPasswordSignUpUseCase(t *testing.T) {
 			Tracer:    noop.NewTracerProvider().Tracer("test"),
 		})
 
-		repo.Members.Save(t.Context(), &models.Member{Email: "john.doe@example.com"})
+		repo.Members.Upsert(t.Context(), &models.Member{Email: "john.doe@example.com"})
 
 		_, err := usecases.EmailPasswordSignUp(t.Context(), EmailPasswordSignUpUseCaseInput{
 			Email:     "john.doe@example.com",

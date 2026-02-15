@@ -41,7 +41,7 @@ func (uc *UseCases) EmailPasswordSignUp(ctx context.Context, input EmailPassword
 		return nil, err
 	}
 
-	err = uc.repos.Members.Save(ctx, member)
+	err = uc.repos.Members.Upsert(ctx, member)
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "failed to persist member")
