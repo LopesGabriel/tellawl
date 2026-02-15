@@ -35,15 +35,15 @@ func Init(ctx context.Context, args InitLoggerArgs) (*AppLogger, error) {
 		args.ServiceNamespace = "tellawl"
 	}
 
-	res, err := newResource(args)
-	if err != nil {
-		return nil, err
-	}
-
 	var logProvider log.LoggerProvider
 	if args.LoggerProvider != nil {
 		logProvider = args.LoggerProvider
 	} else {
+		res, err := newResource(args)
+		if err != nil {
+			return nil, err
+		}
+
 		logProvider, err = newProvider(ctx, res, args)
 		if err != nil {
 			return nil, err

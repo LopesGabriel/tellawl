@@ -14,7 +14,6 @@ func newResource(args InitLoggerArgs) (*resource.Resource, error) {
 			semconv.ServiceVersion(args.ServiceVersion),
 			semconv.ServiceNamespace(args.ServiceNamespace),
 			semconv.TelemetrySDKLanguageGo,
-			semconv.TelemetrySDKVersion("1.37.0"),
 		),
 	)
 }
