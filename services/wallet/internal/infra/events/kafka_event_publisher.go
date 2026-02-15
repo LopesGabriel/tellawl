@@ -1,4 +1,4 @@
-package kafka
+package events
 
 import (
 	"context"
@@ -10,8 +10,8 @@ import (
 	"github.com/lopesgabriel/tellawl/packages/broker"
 	"github.com/lopesgabriel/tellawl/packages/logger"
 	"github.com/lopesgabriel/tellawl/packages/tracing"
-	"github.com/lopesgabriel/tellawl/services/member-service/internal/config"
-	"github.com/lopesgabriel/tellawl/services/member-service/internal/domain/events"
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/config"
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/events"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -37,7 +37,7 @@ func NewKafkaPublisher(appConfig *config.AppConfiguration) *kafkaEventPublisher 
 
 	return &kafkaEventPublisher{
 		client: broker,
-		tracer: tracing.GetTracer("github.com/lopesgabriel/tellawl/services/member-service/internal/infra/events/kafka/kafkaEventPublisher"),
+		tracer: tracing.GetTracer("github.com/lopesgabriel/tellawl/services/wallet/internal/infra/events/kafkaEventPublisher"),
 		logger: appLogger,
 	}
 }

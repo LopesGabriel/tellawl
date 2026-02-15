@@ -2,6 +2,8 @@ module github.com/lopesgabriel/tellawl/services/wallet
 
 go 1.25.1
 
+replace github.com/lopesgabriel/tellawl/packages/broker => ../../packages/broker
+
 replace github.com/lopesgabriel/tellawl/packages/logger => ../../packages/logger
 
 replace github.com/lopesgabriel/tellawl/packages/tracing => ../../packages/tracing
@@ -19,6 +21,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.4
 	github.com/joho/godotenv v1.5.1
+	github.com/lopesgabriel/tellawl/packages/broker v0.0.0-00010101000000-000000000000
 	github.com/lopesgabriel/tellawl/packages/logger v0.0.0-00010101000000-000000000000
 	github.com/lopesgabriel/tellawl/packages/tracing v0.0.0-00010101000000-000000000000
 	go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux v0.65.0
@@ -31,6 +34,7 @@ require (
 require (
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
+	github.com/confluentinc/confluent-kafka-go/v2 v2.13.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
@@ -41,6 +45,9 @@ require (
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/lib/pq v1.10.9 // indirect
+	github.com/moby/go-archive v0.2.0 // indirect
+	github.com/moby/sys/atomicwriter v0.1.0 // indirect
+	github.com/moby/sys/user v0.4.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/bridges/otelslog v0.13.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc v0.14.0 // indirect

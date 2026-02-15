@@ -41,6 +41,7 @@ func main() {
 
 	// Broker initialization
 	publisher := kafka.NewKafkaPublisher(configuration)
+	defer publisher.Close()
 
 	// Repositories initialization
 	repos := repository.NewPostgreSQL(db, publisher)

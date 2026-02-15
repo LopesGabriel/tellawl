@@ -22,6 +22,8 @@ import (
 func main() {
 	ctx := context.Background()
 	appConfig := config.InitAppConfigurations()
+
+	// Telemetry initialization
 	shutdown, err := initTelemetry(ctx, appConfig)
 	if err != nil {
 		fmt.Printf("failed to start telemetry: %v", err)
@@ -34,6 +36,7 @@ func main() {
 		panic(err)
 	}
 
+	// Database initialization
 	db, err := database.NewPostgresClient(context.Background(), appConfig.DatabaseUrl)
 	if err != nil {
 		appLogger.Fatal(ctx, "failed to create the postgres client", slog.String("error", err.Error()))
@@ -49,7 +52,9 @@ func main() {
 		appLogger.Fatal(ctx, "failed to apply database migration", slog.String("error", err.Error()))
 	}
 
-	publisher := events.NewInMemoryEventPublisher(appLogger)
+	// Publisher initialization
+	publisher := events.NewKafkaPublisher(appConfig)
+	defer publisher.Close()
 
 	// Instrumented HTTP Client
 	client := &http.Client{

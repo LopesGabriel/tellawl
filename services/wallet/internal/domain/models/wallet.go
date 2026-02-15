@@ -27,9 +27,9 @@ func (w *Wallet) AddUser(member *Member) {
 	w.Members = append(w.Members, *member)
 	currentTime := time.Now()
 
-	w.AddEvent(events.WalletShared{
+	w.AddEvent(events.WalletSharedEvent{
 		WalletId:  w.Id,
-		UserId:    member.Id,
+		MemberId:  member.Id,
 		Timestamp: currentTime,
 	})
 	w.UpdatedAt = &currentTime
@@ -67,7 +67,7 @@ func (w *Wallet) RegisterNewTransaction(amount Monetary, creator Member, transac
 	w.AddEvent(events.TransactionRegisteredEvent{
 		TransactionId: transaction.Id,
 		WalletId:      w.Id,
-		UserId:        transaction.CreatedBy.Id,
+		MemberId:      transaction.CreatedBy.Id,
 		Amount: map[string]int{
 			"value":  transaction.Amount.Value,
 			"offset": transaction.Amount.Offset,
