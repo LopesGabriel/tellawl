@@ -16,15 +16,15 @@ type EventPublisher interface {
 }
 
 type MemberCreatedEvent struct {
-	UserId    string
-	FirstName string
-	LastName  string
-	Email     string
-	Timestamp time.Time
+	MemberId  string    `json:"member_id"`
+	FirstName string    `json:"first_name"`
+	LastName  string    `json:"last_name"`
+	Email     string    `json:"email"`
+	Timestamp time.Time `json:"timestamp"`
 }
 
 func (e MemberCreatedEvent) EventType() string {
 	return "dev.lopesgabriel.member-service.member.created"
 }
-func (e MemberCreatedEvent) AggregateID() string   { return e.UserId }
+func (e MemberCreatedEvent) AggregateID() string   { return e.MemberId }
 func (e MemberCreatedEvent) OccurredAt() time.Time { return e.Timestamp }

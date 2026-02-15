@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -17,6 +18,8 @@ type AppConfiguration struct {
 	OTELCollectorUrl string
 	ServiceName      string
 	ServiceNamespace string
+	WalletTopic      string
+	KafkaBrokers     []string
 }
 
 func InitAppConfigurations() *AppConfiguration {
@@ -45,6 +48,8 @@ func InitAppConfigurations() *AppConfiguration {
 		serviceNamespace = "tellawl"
 	}
 
+	brokers := strings.Split(os.Getenv("KAFKA_BROKERS"), ",")
+
 	return &AppConfiguration{
 		JwtSecret:        os.Getenv("JWT_SECRET"),
 		Version:          os.Getenv("VERSION"),
@@ -54,5 +59,7 @@ func InitAppConfigurations() *AppConfiguration {
 		OTELCollectorUrl: os.Getenv("OTEL_COLLECTOR_URL"),
 		ServiceName:      serviceName,
 		ServiceNamespace: serviceNamespace,
+		WalletTopic:      os.Getenv("WALLET_TOPIC"),
+		KafkaBrokers:     brokers,
 	}
 }

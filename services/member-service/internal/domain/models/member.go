@@ -60,7 +60,7 @@ func CreateNewMember(firstName, lastName, email, password string) (*Member, erro
 	}
 
 	member.AddEvent(events.MemberCreatedEvent{
-		UserId:    member.Id,
+		MemberId:  member.Id,
 		FirstName: member.FirstName,
 		LastName:  member.LastName,
 		Email:     member.Email,

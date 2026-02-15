@@ -11,7 +11,7 @@ import (
 	"github.com/lopesgabriel/tellawl/services/member-service/internal/domain/repository"
 	"github.com/lopesgabriel/tellawl/services/member-service/internal/infra/api"
 	"github.com/lopesgabriel/tellawl/services/member-service/internal/infra/database"
-	inmemoryevents "github.com/lopesgabriel/tellawl/services/member-service/internal/infra/events/in_memory"
+	"github.com/lopesgabriel/tellawl/services/member-service/internal/infra/events/kafka"
 	uc "github.com/lopesgabriel/tellawl/services/member-service/internal/use_cases"
 	"go.opentelemetry.io/otel"
 )
@@ -40,7 +40,7 @@ func main() {
 	defer db.Close()
 
 	// Broker initialization
-	publisher := inmemoryevents.InitInMemoryEventPublisher()
+	publisher := kafka.NewKafkaPublisher(configuration)
 
 	// Repositories initialization
 	repos := repository.NewPostgreSQL(db, publisher)
