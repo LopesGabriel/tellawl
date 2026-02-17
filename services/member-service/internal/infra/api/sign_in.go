@@ -42,7 +42,7 @@ func (h *apiHandler) HandleSignIn(w http.ResponseWriter, r *http.Request) error 
 	if err != nil {
 		if errors.Is(err, usecases.ErrInvalidCredentials) {
 			span.SetStatus(codes.Error, "Invalid credentials")
-			return NewBadRequestError(ctx, "Invalid credentials", err)
+			return NewUnauthorizedError(ctx, "Invalid credentials")
 		}
 
 		span.SetStatus(codes.Error, "Could not sign in the member")
