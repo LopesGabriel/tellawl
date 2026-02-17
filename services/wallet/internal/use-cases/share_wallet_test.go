@@ -5,9 +5,8 @@ import (
 
 	"github.com/lopesgabriel/tellawl/packages/logger"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/models"
-	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/repository"
-	inmemory "github.com/lopesgabriel/tellawl/services/wallet/internal/infra/database/in_memory"
-	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/events"
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/database"
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/publisher"
 	usecases "github.com/lopesgabriel/tellawl/services/wallet/internal/use-cases"
 	lognoop "go.opentelemetry.io/otel/log/noop"
 	tracenoop "go.opentelemetry.io/otel/trace/noop"
@@ -22,9 +21,9 @@ func TestShareWalletUseCase(t *testing.T) {
 	}
 	defer appLogger.Shutdown(t.Context())
 
-	eventPublisher := events.NewInMemoryEventPublisher(appLogger)
-	memberRepo := inmemory.NewInMemoryMemberRepository(eventPublisher)
-	repos := repository.NewInMemory(eventPublisher)
+	eventPublisher := publisher.NewInMemoryEventPublisher(appLogger)
+	memberRepo := database.NewInMemoryMemberRepository(eventPublisher)
+	repos := database.NewInMemory(eventPublisher)
 	repos.Member = memberRepo
 	useCases := usecases.NewUseCases(usecases.NewUseCasesArgs{
 		Repos:  repos,
@@ -51,6 +50,6 @@ func TestShareWalletUseCase(t *testing.T) {
 	}
 
 	if len(updatedWallet.Members) != 2 {
-		t.Errorf("Expected wallet to have 2 users, got %v", len(wallet.Members))
+		t.Errorf("Expected wallet to have 2 users, got %v", len(updatedWallet.Members))
 	}
 }

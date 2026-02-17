@@ -7,9 +7,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/lopesgabriel/tellawl/packages/logger"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/models"
-	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/repository"
-	inmemory "github.com/lopesgabriel/tellawl/services/wallet/internal/infra/database/in_memory"
-	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/events"
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/database"
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/publisher"
 	usecases "github.com/lopesgabriel/tellawl/services/wallet/internal/use-cases"
 	lognoop "go.opentelemetry.io/otel/log/noop"
 	tracenoop "go.opentelemetry.io/otel/trace/noop"
@@ -24,9 +23,9 @@ func TestWalletCreation(t *testing.T) {
 	}
 	defer appLogger.Shutdown(t.Context())
 
-	publisher := events.NewInMemoryEventPublisher(appLogger)
-	repos := repository.NewInMemory(publisher)
-	memberRepo := inmemory.NewInMemoryMemberRepository(publisher)
+	publisher := publisher.NewInMemoryEventPublisher(appLogger)
+	repos := database.NewInMemory(publisher)
+	memberRepo := database.NewInMemoryMemberRepository(publisher)
 	repos.Member = memberRepo
 
 	useCases := usecases.NewUseCases(usecases.NewUseCasesArgs{

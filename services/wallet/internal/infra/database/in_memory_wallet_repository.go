@@ -1,4 +1,4 @@
-package inmemory
+package database
 
 import (
 	"context"
@@ -7,16 +7,16 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/events"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/models"
-	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/ports"
 )
 
 type InMemoryWalletRepository struct {
 	items     []models.Wallet
-	publisher ports.EventPublisher
+	publisher events.EventPublisher
 }
 
-func NewInMemoryWalletRepository(publisher ports.EventPublisher) *InMemoryWalletRepository {
+func NewInMemoryWalletRepository(publisher events.EventPublisher) *InMemoryWalletRepository {
 	return &InMemoryWalletRepository{
 		items:     []models.Wallet{},
 		publisher: publisher,

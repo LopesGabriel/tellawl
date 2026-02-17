@@ -6,9 +6,8 @@ import (
 	"github.com/lopesgabriel/tellawl/packages/logger"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/errx"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/models"
-	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/repository"
-	inmemory "github.com/lopesgabriel/tellawl/services/wallet/internal/infra/database/in_memory"
-	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/events"
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/database"
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/publisher"
 	usecases "github.com/lopesgabriel/tellawl/services/wallet/internal/use-cases"
 	lognoop "go.opentelemetry.io/otel/log/noop"
 	tracenoop "go.opentelemetry.io/otel/trace/noop"
@@ -23,9 +22,9 @@ func TestRegisterTransactionUseCase(t *testing.T) {
 	}
 	defer appLogger.Shutdown(t.Context())
 
-	eventPublisher := events.NewInMemoryEventPublisher(appLogger)
-	repos := repository.NewInMemory(eventPublisher)
-	memberRepo := inmemory.NewInMemoryMemberRepository(eventPublisher)
+	eventPublisher := publisher.NewInMemoryEventPublisher(appLogger)
+	repos := database.NewInMemory(eventPublisher)
+	memberRepo := database.NewInMemoryMemberRepository(eventPublisher)
 	repos.Member = memberRepo
 
 	t.Run("should register a transaction", func(t *testing.T) {
@@ -75,8 +74,8 @@ func TestRegisterTransactionUseCase(t *testing.T) {
 	})
 
 	t.Run("should register a transaction with custom offset", func(t *testing.T) {
-		repos := repository.NewInMemory(eventPublisher)
-		memberRepo := inmemory.NewInMemoryMemberRepository(eventPublisher)
+		repos := database.NewInMemory(eventPublisher)
+		memberRepo := database.NewInMemoryMemberRepository(eventPublisher)
 		repos.Member = memberRepo
 		useCases := usecases.NewUseCases(usecases.NewUseCasesArgs{
 			Repos:  repos,
@@ -125,8 +124,8 @@ func TestRegisterTransactionUseCase(t *testing.T) {
 	})
 
 	t.Run("User with no access should not register a transaction", func(t *testing.T) {
-		repos := repository.NewInMemory(eventPublisher)
-		memberRepo := inmemory.NewInMemoryMemberRepository(eventPublisher)
+		repos := database.NewInMemory(eventPublisher)
+		memberRepo := database.NewInMemoryMemberRepository(eventPublisher)
 		repos.Member = memberRepo
 		useCases := usecases.NewUseCases(usecases.NewUseCasesArgs{
 			Repos:  repos,
@@ -170,8 +169,8 @@ func TestRegisterTransactionUseCase(t *testing.T) {
 	})
 
 	t.Run("User with access should be able to register a transaction", func(t *testing.T) {
-		repos := repository.NewInMemory(eventPublisher)
-		memberRepo := inmemory.NewInMemoryMemberRepository(eventPublisher)
+		repos := database.NewInMemory(eventPublisher)
+		memberRepo := database.NewInMemoryMemberRepository(eventPublisher)
 		repos.Member = memberRepo
 		useCases := usecases.NewUseCases(usecases.NewUseCasesArgs{
 			Repos:  repos,

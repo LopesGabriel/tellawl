@@ -1,19 +1,19 @@
-package inmemory
+package database
 
 import (
 	"context"
 	"fmt"
 
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/events"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/models"
-	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/ports"
 )
 
 type InMemoryMemberRepository struct {
 	Items     []models.Member
-	publisher ports.EventPublisher
+	publisher events.EventPublisher
 }
 
-func NewInMemoryMemberRepository(publisher ports.EventPublisher) *InMemoryMemberRepository {
+func NewInMemoryMemberRepository(publisher events.EventPublisher) *InMemoryMemberRepository {
 	return &InMemoryMemberRepository{
 		Items:     []models.Member{},
 		publisher: publisher,

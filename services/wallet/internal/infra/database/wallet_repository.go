@@ -1,4 +1,4 @@
-package postgresql
+package database
 
 import (
 	"context"
@@ -8,9 +8,8 @@ import (
 	"time"
 
 	"github.com/lopesgabriel/tellawl/packages/tracing"
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/events"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/models"
-	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/ports"
-	repohttp "github.com/lopesgabriel/tellawl/services/wallet/internal/infra/database/http"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
@@ -18,12 +17,12 @@ import (
 
 type PostgreSQLWalletRepository struct {
 	db         *sql.DB
-	publisher  ports.EventPublisher
-	memberRepo *repohttp.HTTPMemberRepository
+	publisher  events.EventPublisher
+	memberRepo *HTTPMemberRepository
 	tracer     trace.Tracer
 }
 
-func NewPostgreSQLWalletRepository(db *sql.DB, publisher ports.EventPublisher, memberRepo *repohttp.HTTPMemberRepository) *PostgreSQLWalletRepository {
+func NewPostgreSQLWalletRepository(db *sql.DB, publisher events.EventPublisher, memberRepo *HTTPMemberRepository) *PostgreSQLWalletRepository {
 	return &PostgreSQLWalletRepository{
 		db:         db,
 		publisher:  publisher,

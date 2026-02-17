@@ -1,4 +1,4 @@
-package events
+package publisher
 
 import (
 	"context"
@@ -31,7 +31,7 @@ func NewKafkaPublisher(appConfig *config.AppConfiguration) *kafkaEventPublisher 
 	broker, err := broker.NewKafkaBroker(broker.NewKafkaBrokerArgs{
 		BootstrapServers: appConfig.KafkaBrokers,
 		Service:          appConfig.ServiceName,
-		Topic:            appConfig.WalletTopic,
+		Topic:            appConfig.KafkaTopic,
 		Logger:           appLogger,
 	})
 

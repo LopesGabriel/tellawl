@@ -4,18 +4,14 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"net/http"
 
 	"github.com/lopesgabriel/tellawl/packages/logger"
 	"github.com/lopesgabriel/tellawl/packages/tracing"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/config"
-	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/repository"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/controllers"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/database"
-	httpRepository "github.com/lopesgabriel/tellawl/services/wallet/internal/infra/database/http"
-	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/events"
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/publisher"
 	usecases "github.com/lopesgabriel/tellawl/services/wallet/internal/use-cases"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 )
 
@@ -36,37 +32,15 @@ func main() {
 		panic(err)
 	}
 
-	// Database initialization
-	db, err := database.NewPostgresClient(context.Background(), appConfig.DatabaseUrl)
-	if err != nil {
-		appLogger.Fatal(ctx, "failed to create the postgres client", slog.String("error", err.Error()))
-	}
-	err = db.Ping()
-	if err != nil {
-		appLogger.Fatal(ctx, "failed to ping database", slog.String("error", err.Error()))
-	}
-	appLogger.Info(ctx, "Database connected")
-
-	err = database.MigrateUp(appConfig.MigrationUrl, appConfig.DatabaseUrl)
-	if err != nil {
-		appLogger.Fatal(ctx, "failed to apply database migration", slog.String("error", err.Error()))
-	}
-
 	// Publisher initialization
-	publisher := events.NewKafkaPublisher(appConfig)
+	publisher := publisher.InitEventPublisher(ctx, appConfig, appLogger)
 	defer publisher.Close()
 
-	// Instrumented HTTP Client
-	client := &http.Client{
-		Transport: otelhttp.NewTransport(http.DefaultTransport),
-	}
-
-	// Repositories instance
-	memberRepo, err := httpRepository.NewHTTPMemberRepository(appConfig.MemberServiceUrl, client)
+	// Database initialization
+	repos, err := database.InitDatabase(ctx, appConfig, publisher)
 	if err != nil {
-		appLogger.Fatal(ctx, "failed to create HTTP member repository", slog.String("error", err.Error()))
+		appLogger.Fatal(ctx, "failed to initialize database", slog.String("error", err.Error()))
 	}
-	repos := repository.NewPostgreSQL(db, publisher, memberRepo)
 
 	useCases := usecases.NewUseCases(usecases.NewUseCasesArgs{
 		Repos:  repos,
@@ -85,7 +59,7 @@ func initTelemetry(ctx context.Context, appConfig *config.AppConfiguration) (fun
 		ServiceName:      appConfig.ServiceName,
 		ServiceNamespace: appConfig.ServiceNamespace,
 		ServiceVersion:   appConfig.Version,
-		Level:            slog.LevelDebug,
+		Level:            appConfig.LogLevel,
 		LoggerProvider:   nil,
 	})
 	if err != nil {

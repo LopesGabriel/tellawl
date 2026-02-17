@@ -6,9 +6,8 @@ import (
 
 	"github.com/lopesgabriel/tellawl/packages/logger"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/models"
-	"github.com/lopesgabriel/tellawl/services/wallet/internal/domain/repository"
-	inmemory "github.com/lopesgabriel/tellawl/services/wallet/internal/infra/database/in_memory"
-	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/events"
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/database"
+	"github.com/lopesgabriel/tellawl/services/wallet/internal/infra/publisher"
 	usecases "github.com/lopesgabriel/tellawl/services/wallet/internal/use-cases"
 	lognoop "go.opentelemetry.io/otel/log/noop"
 	tracenoop "go.opentelemetry.io/otel/trace/noop"
@@ -23,11 +22,11 @@ func TestListUserWalletsUseCase(t *testing.T) {
 	}
 	defer appLogger.Shutdown(t.Context())
 
-	eventPublisher := events.NewInMemoryEventPublisher(appLogger)
+	eventPublisher := publisher.NewInMemoryEventPublisher(appLogger)
 
 	t.Run("should list user wallets", func(t *testing.T) {
-		repos := repository.NewInMemory(eventPublisher)
-		memberRepo := inmemory.NewInMemoryMemberRepository(eventPublisher)
+		repos := database.NewInMemory(eventPublisher)
+		memberRepo := database.NewInMemoryMemberRepository(eventPublisher)
 		repos.Member = memberRepo
 		useCases := usecases.NewUseCases(usecases.NewUseCasesArgs{
 			Repos:  repos,

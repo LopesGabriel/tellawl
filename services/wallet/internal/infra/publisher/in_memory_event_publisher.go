@@ -1,4 +1,4 @@
-package events
+package publisher
 
 import (
 	"context"
@@ -29,5 +29,9 @@ func (p inMemoryEventPublisher) Publish(ctx context.Context, events []events.Dom
 		)
 	}
 
+	return nil
+}
+
+func (p inMemoryEventPublisher) Close() error {
 	return nil
 }
