@@ -63,29 +63,29 @@ func main() {
 	// Cliente OAuth2 para Gmail
 	b, err := os.ReadFile(config.CredentialsFile)
 	if err != nil {
-		applogger.Fatal(ctx, "Erro ao ler credenciais OAuth2 (%s): %v", config.CredentialsFile, err)
+		applogger.Fatal(ctx, "Erro ao ler credenciais OAuth2", slog.String("file", config.CredentialsFile), slog.Any("error", err))
 	}
 
 	oauthConfig, err := google.ConfigFromJSON(b, gmail.GmailReadonlyScope, pubsub.ScopePubSub)
 	if err != nil {
-		applogger.Fatal(ctx, "Erro ao parsear config OAuth2: %v", err)
+		applogger.Fatal(ctx, "Erro ao parsear config OAuth2", slog.Any("error", err))
 	}
 
 	httpClient, err := getClient(oauthConfig, config.TokenFile)
 	if err != nil {
-		applogger.Fatal(ctx, "Erro ao obter cliente HTTP: %v", err)
+		applogger.Fatal(ctx, "Erro ao obter cliente HTTP", slog.Any("error", err))
 	}
 
 	// Serviço Gmail
 	gmailService, err := gmail.NewService(ctx, option.WithHTTPClient(httpClient))
 	if err != nil {
-		applogger.Fatal(ctx, "Erro ao criar serviço Gmail: %v", err)
+		applogger.Fatal(ctx, "Erro ao criar serviço Gmail", slog.Any("error", err))
 	}
 
 	// Cliente PubSub
 	psClient, err := pubsub.NewClient(ctx, config.GoogleProjectId, option.WithAuthCredentialsFile(option.ServiceAccount, config.ServiceCredentialsFile))
 	if err != nil {
-		applogger.Fatal(ctx, "Erro ao criar cliente PubSub: %v", err)
+		applogger.Fatal(ctx, "Erro ao criar cliente PubSub", slog.Any("error", err))
 	}
 	defer psClient.Close()
 
@@ -112,13 +112,13 @@ func main() {
 
 	select {
 	case sig := <-sigCh:
-		applogger.Info(ctx, "Sinal recebido: %v. Encerrando...", sig)
+		applogger.Info(ctx, "Sinal recebido. Encerrando...", slog.String("signal", sig.String()))
 		if err := listener.Stop(); err != nil {
-			applogger.Fatal(ctx, "Erro ao parar listener: %v", err)
+			applogger.Fatal(ctx, "Erro ao parar listener", slog.Any("error", err))
 		}
 	case err := <-errCh:
 		if err != nil {
-			applogger.Fatal(ctx, "Listener encerrado com erro: %v", err)
+			applogger.Fatal(ctx, "Listener encerrado com erro", slog.Any("error", err))
 		}
 	}
 

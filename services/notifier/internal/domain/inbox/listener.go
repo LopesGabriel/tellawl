@@ -93,7 +93,7 @@ func (l *pubSubListener) ensureTopic() error {
 		Topic: l.topicKey(),
 	})
 	if err == nil {
-		l.logger.Info(l.ctx, "Tópico já existe: %s", l.topicKey())
+		l.logger.Info(l.ctx, "Tópico já existe", slog.String("topic", l.topicKey()))
 		return nil
 	}
 
@@ -109,7 +109,7 @@ func (l *pubSubListener) ensureTopic() error {
 		return fmt.Errorf("erro ao criar tópico: %w", err)
 	}
 
-	l.logger.Info(l.ctx, "Tópico criado: %s", l.topicKey())
+	l.logger.Info(l.ctx, "Tópico criado", slog.String("topic", l.topicKey()))
 	return nil
 }
 
@@ -119,7 +119,7 @@ func (l *pubSubListener) ensureSubscription() error {
 		Subscription: l.subscriptionKey(),
 	})
 	if err == nil {
-		l.logger.Info(l.ctx, "Subscription já existe: %s", l.subscriptionKey())
+		l.logger.Info(l.ctx, "Subscription já existe", slog.String("subscription", l.subscriptionKey()))
 		return nil
 	}
 
@@ -136,7 +136,7 @@ func (l *pubSubListener) ensureSubscription() error {
 		return fmt.Errorf("erro ao criar subscription: %w", err)
 	}
 
-	l.logger.Info(l.ctx, "Subscription criada: %s", l.subscriptionKey())
+	l.logger.Info(l.ctx, "Subscription criada", slog.String("subscription", l.subscriptionKey()))
 	return nil
 }
 
@@ -169,7 +169,7 @@ func (l *pubSubListener) ensureTopicPermissions() error {
 	}
 
 	if foundMember {
-		l.logger.Info(l.ctx, "Permissão 'Pub/Sub Publisher' já configurada para %s", principal)
+		l.logger.Info(l.ctx, "Permissão 'Pub/Sub Publisher' já configurada", slog.String("principal", principal))
 		return nil
 	}
 
@@ -190,7 +190,7 @@ func (l *pubSubListener) ensureTopicPermissions() error {
 		return fmt.Errorf("erro ao definir IAM do tópico: %w", err)
 	}
 
-	l.logger.Info(l.ctx, "Permissão 'Pub/Sub Publisher' concedida a %s", principal)
+	l.logger.Info(l.ctx, "Permissão 'Pub/Sub Publisher' concedida", slog.String("principal", principal))
 	return nil
 }
 
@@ -206,7 +206,7 @@ func (l *pubSubListener) ensureWatch() error {
 		return fmt.Errorf("erro ao configurar watch: %w", err)
 	}
 
-	l.logger.Info(l.ctx, "Watch configurado! HistoryId: %v, Expira em: %v", res.HistoryId, res.Expiration)
+	l.logger.Info(l.ctx, "Watch configurado", slog.Uint64("historyId", res.HistoryId), slog.Int64("expiration", res.Expiration))
 	return nil
 }
 
@@ -234,7 +234,7 @@ func (l *pubSubListener) Start() error {
 	// Inicia a renovação periódica do watch
 	go l.startWatchRenewal()
 
-	l.logger.Info(l.ctx, "Listener iniciado. Aguardando mensagens no tópico %s...", l.topic)
+	l.logger.Info(l.ctx, "Listener iniciado. Aguardando mensagens no tópico...", slog.String("topic", l.topic))
 
 	sub := l.psClient.Subscriber(l.subscriptionKey())
 	err := sub.Receive(l.ctx, func(ctx context.Context, m *pubsub.Message) {
@@ -242,7 +242,7 @@ func (l *pubSubListener) Start() error {
 		defer span.End()
 
 		if err := l.HandleMessage(ctx, m.Data); err != nil {
-			l.logger.Error(ctx, "Erro ao processar mensagem: %v", err)
+			l.logger.Error(ctx, "Erro ao processar mensagem", slog.Any("error", err))
 			span.SetStatus(otelcodes.Error, "Erro ao processar mensagem")
 			span.RecordError(err)
 			m.Nack()
