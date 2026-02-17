@@ -39,15 +39,13 @@ func Init(ctx context.Context, args InitLoggerArgs) (*AppLogger, error) {
 	if args.LoggerProvider != nil {
 		logProvider = args.LoggerProvider
 	} else {
-		res, err := newResource(args)
-		if err != nil {
-			return nil, err
-		}
+		res := newResource(args)
 
-		logProvider, err = newProvider(ctx, res, args)
+		logP, err := newProvider(ctx, res, args)
 		if err != nil {
 			return nil, err
 		}
+		logProvider = logP
 	}
 
 	global.SetLoggerProvider(logProvider)

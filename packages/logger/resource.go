@@ -5,7 +5,7 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.39.0"
 )
 
-func newResource(args InitLoggerArgs) (*resource.Resource, error) {
+func newResource(args InitLoggerArgs) *resource.Resource {
 	return resource.NewWithAttributes(
 		semconv.SchemaURL,
 		semconv.ServiceName(args.ServiceName),
@@ -13,5 +13,5 @@ func newResource(args InitLoggerArgs) (*resource.Resource, error) {
 		semconv.ServiceNamespace(args.ServiceNamespace),
 		semconv.TelemetrySDKLanguageGo,
 		semconv.TelemetrySDKNameKey.String("opentelemetry"),
-	), nil
+	)
 }

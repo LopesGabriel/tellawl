@@ -22,10 +22,7 @@ func Init(ctx context.Context, args NewTraceProviderArgs) (*traceSdk.TracerProvi
 		return nil, err
 	}
 
-	traceProvider, err := newTraceProvider(exporter, args)
-	if err != nil {
-		return nil, err
-	}
+	traceProvider := newTraceProvider(exporter, args)
 
 	otel.SetTextMapPropagator(propagation.TraceContext{})
 	return traceProvider, nil

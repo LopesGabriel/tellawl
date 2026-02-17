@@ -7,7 +7,7 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.39.0"
 )
 
-func newTraceProvider(exporter *otlptrace.Exporter, args NewTraceProviderArgs) (*trace.TracerProvider, error) {
+func newTraceProvider(exporter *otlptrace.Exporter, args NewTraceProviderArgs) *trace.TracerProvider {
 	resource := resource.NewWithAttributes(
 		semconv.SchemaURL,
 		semconv.ServiceName(args.ServiceName),
@@ -22,5 +22,5 @@ func newTraceProvider(exporter *otlptrace.Exporter, args NewTraceProviderArgs) (
 		trace.WithResource(resource),
 	)
 
-	return traceProvider, nil
+	return traceProvider
 }
