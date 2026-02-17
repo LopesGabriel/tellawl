@@ -6,14 +6,12 @@ import (
 )
 
 func newResource(args InitLoggerArgs) (*resource.Resource, error) {
-	return resource.Merge(
-		resource.Default(),
-		resource.NewWithAttributes(
-			semconv.SchemaURL,
-			semconv.ServiceName(args.ServiceName),
-			semconv.ServiceVersion(args.ServiceVersion),
-			semconv.ServiceNamespace(args.ServiceNamespace),
-			semconv.TelemetrySDKLanguageGo,
-		),
-	)
+	return resource.NewWithAttributes(
+		semconv.SchemaURL,
+		semconv.ServiceName(args.ServiceName),
+		semconv.ServiceVersion(args.ServiceVersion),
+		semconv.ServiceNamespace(args.ServiceNamespace),
+		semconv.TelemetrySDKLanguageGo,
+		semconv.TelemetrySDKNameKey.String("opentelemetry"),
+	), nil
 }

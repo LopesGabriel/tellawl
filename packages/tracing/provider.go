@@ -8,19 +8,14 @@ import (
 )
 
 func newTraceProvider(exporter *otlptrace.Exporter, args NewTraceProviderArgs) (*trace.TracerProvider, error) {
-	resource, err := resource.Merge(
-		resource.Default(),
-		resource.NewWithAttributes(
-			semconv.SchemaURL,
-			semconv.ServiceName(args.ServiceName),
-			semconv.ServiceVersion(args.ServiceVersion),
-			semconv.ServiceNamespace(args.ServiceNamespace),
-		),
+	resource := resource.NewWithAttributes(
+		semconv.SchemaURL,
+		semconv.ServiceName(args.ServiceName),
+		semconv.ServiceVersion(args.ServiceVersion),
+		semconv.ServiceNamespace(args.ServiceNamespace),
+		semconv.TelemetrySDKLanguageGo,
+		semconv.TelemetrySDKNameKey.String("opentelemetry"),
 	)
-
-	if err != nil {
-		return nil, err
-	}
 
 	traceProvider := trace.NewTracerProvider(
 		trace.WithBatcher(exporter),

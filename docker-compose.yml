@@ -1,13 +1,5 @@
 services:
   ## Databases
-  wallet-db:
-    image: postgres:16.2-alpine3.19
-    environment:
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: wallet
-    ports:
-      - 35432:5432
-
   member-service-db:
     image: postgres:16.2-alpine3.19
     environment:
@@ -15,6 +7,22 @@ services:
       POSTGRES_DB: member-service
     ports:
       - 15432:5432
+
+  notifier-db:
+    image: postgres:16.2-alpine3.19
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: notifier
+    ports:
+      - 25432:5432
+
+  wallet-db:
+    image: postgres:16.2-alpine3.19
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: wallet
+    ports:
+      - 35432:5432
 
   ## Broker
   broker:

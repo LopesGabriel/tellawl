@@ -1,0 +1,7 @@
+CREATE TABLE processed_messages (
+  id VARCHAR(36) PRIMARY KEY,
+  recipient VARCHAR(120) NOT NULL,
+  sender VARCHAR(120) NOT NULL,
+  subject VARCHAR(150) NOT NULL,
+  processed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

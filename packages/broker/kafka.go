@@ -13,11 +13,12 @@ import (
 )
 
 type kafkaBroker struct {
-	closeChan chan bool
-	consumer  *kafka.Consumer
-	logger    *logger.AppLogger
-	topic     string
-	producer  *kafka.Producer
+	closeChan   chan bool
+	consumer    *kafka.Consumer
+	logger      *logger.AppLogger
+	topic       string
+	producer    *kafka.Producer
+	serviceName string
 }
 
 type NewKafkaBrokerArgs struct {
@@ -47,11 +48,12 @@ func NewKafkaBroker(args NewKafkaBrokerArgs) (Broker, error) {
 	}
 
 	return &kafkaBroker{
-		topic:     args.Topic,
-		consumer:  c,
-		producer:  p,
-		closeChan: make(chan bool),
-		logger:    args.Logger,
+		topic:       args.Topic,
+		serviceName: args.Service,
+		consumer:    c,
+		producer:    p,
+		closeChan:   make(chan bool),
+		logger:      args.Logger,
 	}, nil
 }
 
@@ -69,6 +71,7 @@ func (k *kafkaBroker) Produce(ctx context.Context, message *Message) error {
 		Headers: []kafka.Header{
 			{Key: "ce-id", Value: []byte(message.EventId)},
 			{Key: "ce-type", Value: []byte(message.EventType)},
+			{Key: "ce-source", Value: []byte(fmt.Sprintf("dev.lopesgabriel.tellawl.%s", k.serviceName))},
 			{Key: "ce-traceparent", Value: []byte(buildTraceparent(ctx))},
 		},
 		TopicPartition: kafka.TopicPartition{
