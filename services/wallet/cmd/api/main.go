@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/lopesgabriel/tellawl/packages/broker"
 	"github.com/lopesgabriel/tellawl/packages/logger"
 	"github.com/lopesgabriel/tellawl/packages/tracing"
 	"github.com/lopesgabriel/tellawl/services/wallet/internal/config"
@@ -32,8 +33,18 @@ func main() {
 		panic(err)
 	}
 
+	var kafkaBroker broker.Broker
+	if len(appConfig.KafkaBrokers) > 0 && appConfig.KafkaTopic != "" {
+		kafkaBroker, err = broker.NewKafkaBroker(broker.NewKafkaBrokerArgs{
+			BootstrapServers: appConfig.KafkaBrokers,
+			Service:          appConfig.ServiceName,
+			Topic:            appConfig.KafkaTopic,
+			Logger:           appLogger,
+		})
+	}
+
 	// Publisher initialization
-	publisher := publisher.InitEventPublisher(ctx, appConfig, appLogger)
+	publisher := publisher.InitEventPublisher(ctx, appConfig, appLogger, kafkaBroker)
 	defer publisher.Close()
 
 	// Database initialization
