@@ -13,14 +13,17 @@ import (
 )
 
 type kafkaBroker struct {
-	closeChan   chan bool
-	consumer    *kafka.Consumer
-	logger      *logger.AppLogger
-	topic       string
-	producer    *kafka.Producer
-	serviceName string
+	closeChan       chan struct{}
+	doneChan        chan struct{}
+	consumerStarted bool
+	consumer        *kafka.Consumer
+	logger          *logger.AppLogger
+	topic           string
+	producer        *kafka.Producer
+	serviceName     string
 }
 
+// NewKafkaBrokerArgs holds the arguments for creating a new Kafka broker.
 type NewKafkaBrokerArgs struct {
 	BootstrapServers []string
 	Service          string
@@ -28,6 +31,7 @@ type NewKafkaBrokerArgs struct {
 	Logger           *logger.AppLogger
 }
 
+// NewKafkaBroker creates a new Kafka broker with a producer and consumer.
 func NewKafkaBroker(args NewKafkaBrokerArgs) (Broker, error) {
 	p, err := kafka.NewProducer(&kafka.ConfigMap{
 		"bootstrap.servers":        strings.Join(args.BootstrapServers, ","),
@@ -42,6 +46,8 @@ func NewKafkaBroker(args NewKafkaBrokerArgs) (Broker, error) {
 		"group.id":                 fmt.Sprintf("%s-group", args.Service),
 		"auto.offset.reset":        "earliest",
 		"allow.auto.create.topics": "true",
+		"session.timeout.ms":       6000,
+		"max.poll.interval.ms":     300000, // 5 minutos
 	})
 	if err != nil {
 		return nil, err
@@ -52,16 +58,19 @@ func NewKafkaBroker(args NewKafkaBrokerArgs) (Broker, error) {
 		serviceName: args.Service,
 		consumer:    c,
 		producer:    p,
-		closeChan:   make(chan bool),
+		closeChan:   make(chan struct{}),
+		doneChan:    make(chan struct{}),
 		logger:      args.Logger,
 	}, nil
 }
 
 func (k *kafkaBroker) Close() error {
 	k.producer.Close()
-	k.closeChan <- true
-	err := k.consumer.Close()
-	return err
+	if k.consumerStarted {
+		close(k.closeChan)
+		<-k.doneChan
+	}
+	return k.consumer.Close()
 }
 
 func (k *kafkaBroker) Produce(ctx context.Context, message *Message) error {
@@ -97,14 +106,16 @@ func (k *kafkaBroker) StartConsumer(topic string, callback CallbackFunction) err
 		return err
 	}
 
-	go func() {
-		run := true
+	k.consumerStarted = true
 
-		for run {
+	go func() {
+		for {
 			select {
 			case <-k.closeChan:
 				k.logger.Debug(context.TODO(), "Closing Consumer")
-				run = false
+				k.logger.Debug(context.TODO(), "consumer stopped")
+				close(k.doneChan)
+				return
 			default:
 				msg, err := k.consumer.ReadMessage(time.Second)
 				if err != nil {
@@ -126,9 +137,6 @@ func (k *kafkaBroker) StartConsumer(topic string, callback CallbackFunction) err
 				}
 			}
 		}
-
-		k.logger.Debug(context.TODO(), "consumer stopped")
-		close(k.closeChan)
 	}()
 
 	return nil

@@ -6,7 +6,8 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
 
-type CallbackFunction = func(*kafka.Message) error
+type KafkaMessage = kafka.Message
+type CallbackFunction = func(*KafkaMessage) error
 
 type Broker interface {
 	Close() error

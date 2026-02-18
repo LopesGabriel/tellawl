@@ -79,6 +79,10 @@ func (l *AppLogger) SetLevel(ctx context.Context, level slog.Level) {
 }
 
 func (l *AppLogger) Info(ctx context.Context, message string, args ...any) {
+	if l.Level > slog.LevelInfo {
+		return
+	}
+
 	l.logger.InfoContext(ctx, message, args...)
 	fmt.Printf("\033[34m[INFO]\033[0m %s %s: %v\n", time.Now().UTC().Format(time.RFC3339), message, args)
 }
@@ -90,6 +94,10 @@ func (l *AppLogger) Error(ctx context.Context, message string, args ...any) {
 }
 
 func (l *AppLogger) Debug(ctx context.Context, message string, args ...any) {
+	if l.Level > slog.LevelDebug {
+		return
+	}
+
 	l.logger.DebugContext(ctx, message, args...)
 	fmt.Printf("\033[36m[DEBUG]\033[0m %s %s: %v\n", time.Now().UTC().Format(time.RFC3339), message, args)
 }
