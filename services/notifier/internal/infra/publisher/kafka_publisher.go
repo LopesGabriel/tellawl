@@ -22,18 +22,11 @@ type kafkaEventPublisher struct {
 	logger *logger.AppLogger
 }
 
-func NewKafkaPublisher(appConfig *config.AppConfiguration) events.EventPublisher {
+func NewKafkaPublisher(appConfig *config.AppConfiguration, broker broker.Broker) events.EventPublisher {
 	appLogger, err := logger.GetLogger()
 	if err != nil {
 		panic(err)
 	}
-
-	broker, err := broker.NewKafkaBroker(broker.NewKafkaBrokerArgs{
-		BootstrapServers: appConfig.KafkaBrokers,
-		Service:          appConfig.ServiceName,
-		Topic:            appConfig.KafkaTopic,
-		Logger:           appLogger,
-	})
 
 	return &kafkaEventPublisher{
 		client: broker,

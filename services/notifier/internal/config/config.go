@@ -22,8 +22,11 @@ type AppConfiguration struct {
 	ServiceNamespace       string
 	ServiceVersion         string
 	LoggerLevel            slog.Level
-	KafkaBrokers           []string
-	KafkaTopic             string
+
+	KafkaBrokers []string
+	KafkaTopic   string
+
+	TelegramBotToken string
 }
 
 func InitAppConfigurations() *AppConfiguration {
@@ -67,6 +70,7 @@ func InitAppConfigurations() *AppConfiguration {
 		LoggerLevel:            parseLogLevel(logLevel),
 		KafkaBrokers:           kafkaBrokers,
 		KafkaTopic:             getEnv("KAFKA_TOPIC", ""),
+		TelegramBotToken:       getEnv("TELEGRAM_BOT_TOKEN", ""),
 	}
 }
 

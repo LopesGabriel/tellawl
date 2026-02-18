@@ -19,12 +19,15 @@ import (
 	"google.golang.org/api/gmail/v1"
 	"google.golang.org/api/option"
 
+	"github.com/lopesgabriel/tellawl/packages/broker"
 	"github.com/lopesgabriel/tellawl/packages/logger"
 	"github.com/lopesgabriel/tellawl/packages/tracing"
 	"github.com/lopesgabriel/tellawl/services/notifier/internal/config"
 	"github.com/lopesgabriel/tellawl/services/notifier/internal/domain/inbox"
 	"github.com/lopesgabriel/tellawl/services/notifier/internal/infra/database"
+	"github.com/lopesgabriel/tellawl/services/notifier/internal/infra/listener"
 	"github.com/lopesgabriel/tellawl/services/notifier/internal/infra/publisher"
+	"github.com/lopesgabriel/tellawl/services/notifier/internal/infra/telegram"
 )
 
 func main() {
@@ -47,18 +50,48 @@ func main() {
 
 	applogger.Info(ctx, "Iniciando o Notifier Service...")
 
+	var kafkaBroker broker.Broker
+	if len(config.KafkaBrokers) > 0 && config.KafkaTopic != "" {
+		kafkaBroker, err = broker.NewKafkaBroker(broker.NewKafkaBrokerArgs{
+			BootstrapServers: config.KafkaBrokers,
+			Service:          config.ServiceName,
+			Topic:            config.KafkaTopic,
+			Logger:           applogger,
+		})
+	}
+
 	// Inicializa o publisher de eventos
-	eventPublisher := publisher.InitEventPublisher(ctx, config, applogger)
+	eventPublisher := publisher.InitEventPublisher(ctx, config, applogger, kafkaBroker)
 
 	// Inicializa o banco de dados (PostgreSQL)
 	db := initDatabase(ctx, config, applogger)
 	defer db.Close()
 
+	dbTracer := tracing.GetTracer("github.com/lopesgabriel/tellawl/services/notifier/internal/infra/database")
 	processedMessagesRepository := database.NewPostgreSQLProcessedMessagesRepository(
 		db,
 		eventPublisher,
-		nil,
+		dbTracer,
 	)
+	telegramRepository := database.NewPostgreSQLTelegramNotificationTargetRepository(
+		db,
+		dbTracer,
+	)
+
+	// Telegram Bot API Client
+	telegramClient := telegram.NewClient(config.TelegramBotToken)
+
+	// Inicia o Kafka consumer
+	kafkaListener := listener.NewKafkaListener(listener.NewKafkaListenerParams{
+		Topic:                       config.KafkaTopic,
+		Broker:                      kafkaBroker,
+		ProcessedMessagesRepository: processedMessagesRepository,
+		Tracer:                      tracing.GetTracer("github.com/lopesgabriel/tellawl/services/notifier/internal/infra/listener"),
+		AppLogger:                   applogger,
+		TelegramClient:              telegramClient,
+		TelegramRepo:                telegramRepository,
+	})
+	kafkaListener.Start()
 
 	// Cliente OAuth2 para Gmail
 	b, err := os.ReadFile(config.CredentialsFile)
