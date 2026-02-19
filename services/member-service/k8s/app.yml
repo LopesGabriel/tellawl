@@ -17,14 +17,19 @@ spec:
     spec:
       containers:
         - name: member-service
-          image: lopesgabriel/member-service:1.0.1
+          image: lopesgabriel/member-service:1.0.2
           env:
             - name: VERSION
-              value: "1.0.1"
+              value: "1.0.2"
             - name: LOG_LEVEL
               value: "INFO"
             - name: OTEL_COLLECTOR_URL
               value: "otel-lgtm.observability.svc.cluster.local:4317"
+            - name: POSTGRESQL_URL
+              valueFrom:
+                secretKeyRef:
+                  name: member-service-db-secret
+                  key: POSTGRESQL_URL
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:

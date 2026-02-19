@@ -25,34 +25,12 @@ type AppConfiguration struct {
 }
 
 func InitAppConfigurations() *AppConfiguration {
-	err := godotenv.Load()
-	if err != nil {
-		slog.Error("Error loading .env file", "error", err)
-	}
+	_ = godotenv.Load()
 
-	rawPort := os.Getenv("PORT")
-	if rawPort == "" {
-		rawPort = "8080"
-	}
-
-	logLevel := slog.LevelInfo
-	if level := os.Getenv("LOG_LEVEL"); level != "" {
-		logLevel = parseLogLevel(level)
-	}
-
+	rawPort := getEnv("PORT", "8080")
 	port, err := strconv.Atoi(rawPort)
 	if err != nil {
 		port = 8080
-	}
-
-	serviceName := os.Getenv("SERVICE_NAME")
-	if serviceName == "" {
-		serviceName = "member-service"
-	}
-
-	serviceNamespace := os.Getenv("SERVICE_NAMESPACE")
-	if serviceNamespace == "" {
-		serviceNamespace = "tellawl"
 	}
 
 	brokers := []string{}
@@ -61,16 +39,16 @@ func InitAppConfigurations() *AppConfiguration {
 	}
 
 	return &AppConfiguration{
-		JwtSecret:        os.Getenv("JWT_SECRET"),
-		Version:          os.Getenv("VERSION"),
+		JwtSecret:        getEnv("JWT_SECRET", ""),
+		Version:          getEnv("VERSION", "1.0.0"),
 		Port:             port,
-		LogLevel:         logLevel,
-		DatabaseUrl:      os.Getenv("POSTGRESQL_URL"),
-		MigrationUrl:     os.Getenv("MIGRATIONS_URL"),
-		OTELCollectorUrl: os.Getenv("OTEL_COLLECTOR_URL"),
-		ServiceName:      serviceName,
-		ServiceNamespace: serviceNamespace,
-		WalletTopic:      os.Getenv("WALLET_TOPIC"),
+		LogLevel:         parseLogLevel(getEnv("LOG_LEVEL", "INFO")),
+		DatabaseUrl:      getEnv("POSTGRESQL_URL", ""),
+		MigrationUrl:     getEnv("MIGRATIONS_URL", "file://db/migrations"),
+		OTELCollectorUrl: getEnv("OTEL_COLLECTOR_URL", ""),
+		ServiceName:      getEnv("SERVICE_NAME", "member-service"),
+		ServiceNamespace: getEnv("SERVICE_NAMESPACE", "tellawl"),
+		WalletTopic:      getEnv("WALLET_TOPIC", ""),
 		KafkaBrokers:     brokers,
 	}
 }
@@ -89,4 +67,11 @@ func parseLogLevel(level string) slog.Level {
 		log.Printf("Invalid LOG_LEVEL '%s', defaulting to INFO", level)
 		return slog.LevelInfo
 	}
+}
+
+func getEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
 }

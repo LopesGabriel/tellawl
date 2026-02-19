@@ -54,6 +54,7 @@ RUN useradd -r -u 1001 -g root appuser
 WORKDIR /app
 
 COPY --from=builder /bin/member-service .
+COPY --from=builder /build/services/member-service/db ./db
 
 USER appuser
 

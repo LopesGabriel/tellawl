@@ -13,7 +13,7 @@ import (
 func InitDatabase(ctx context.Context, appConfig *config.AppConfiguration, appLogger *logger.AppLogger, publisher events.EventPublisher) (*repository.Repositories, error) {
 	repositories := &repository.Repositories{}
 
-	if appConfig.DatabaseUrl == "" && appConfig.MigrationUrl == "" {
+	if appConfig.DatabaseUrl == "" || appConfig.MigrationUrl == "" {
 		repositories.Members = InitInMemoryMemberRepository(publisher)
 		appLogger.Warn(ctx, "Using InMemory Database! Not recommended for production environment")
 		return repositories, nil
