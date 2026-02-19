@@ -5,17 +5,18 @@ import (
 
 	"github.com/lopesgabriel/tellawl/services/member-service/internal/domain/models"
 	"github.com/lopesgabriel/tellawl/services/member-service/internal/domain/repository"
-	inmemory "github.com/lopesgabriel/tellawl/services/member-service/internal/infra/events/in_memory"
+	"github.com/lopesgabriel/tellawl/services/member-service/internal/infra/database"
+	"github.com/lopesgabriel/tellawl/services/member-service/internal/infra/publisher"
 	"go.opentelemetry.io/otel/trace/noop"
 )
 
 func TestEmailPasswordSignUpUseCase(t *testing.T) {
 	t.Run("Sign up member with email password", func(t *testing.T) {
-		publisher := inmemory.InitInMemoryEventPublisher()
-		repo := repository.NewInMemory(publisher)
+		publisher := publisher.InitInMemoryEventPublisher()
+		memberRepo := database.InitInMemoryMemberRepository(publisher)
 		usecases := InitUseCases(InitUseCasesArgs{
 			JwtSecret: "t3st-S3cret",
-			Repos:     repo,
+			Repos:     &repository.Repositories{Members: memberRepo},
 			Tracer:    noop.NewTracerProvider().Tracer("test"),
 		})
 
@@ -55,15 +56,15 @@ func TestEmailPasswordSignUpUseCase(t *testing.T) {
 	})
 
 	t.Run("Should not sign up when an account with that email already exists", func(t *testing.T) {
-		publisher := inmemory.InitInMemoryEventPublisher()
-		repo := repository.NewInMemory(publisher)
+		publisher := publisher.InitInMemoryEventPublisher()
+		memberRepo := database.InitInMemoryMemberRepository(publisher)
 		usecases := InitUseCases(InitUseCasesArgs{
 			JwtSecret: "t3st-S3cret",
-			Repos:     repo,
+			Repos:     &repository.Repositories{Members: memberRepo},
 			Tracer:    noop.NewTracerProvider().Tracer("test"),
 		})
 
-		repo.Members.Upsert(t.Context(), &models.Member{Email: "john.doe@example.com"})
+		memberRepo.Upsert(t.Context(), &models.Member{Email: "john.doe@example.com"})
 
 		_, err := usecases.EmailPasswordSignUp(t.Context(), EmailPasswordSignUpUseCaseInput{
 			Email:     "john.doe@example.com",

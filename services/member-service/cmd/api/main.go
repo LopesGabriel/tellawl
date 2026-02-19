@@ -2,16 +2,15 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"log/slog"
 
+	"github.com/lopesgabriel/tellawl/packages/broker"
 	"github.com/lopesgabriel/tellawl/packages/logger"
 	"github.com/lopesgabriel/tellawl/packages/tracing"
 	"github.com/lopesgabriel/tellawl/services/member-service/internal/config"
-	"github.com/lopesgabriel/tellawl/services/member-service/internal/domain/repository"
 	"github.com/lopesgabriel/tellawl/services/member-service/internal/infra/api"
 	"github.com/lopesgabriel/tellawl/services/member-service/internal/infra/database"
-	"github.com/lopesgabriel/tellawl/services/member-service/internal/infra/events/kafka"
+	"github.com/lopesgabriel/tellawl/services/member-service/internal/infra/publisher"
 	uc "github.com/lopesgabriel/tellawl/services/member-service/internal/use_cases"
 	"go.opentelemetry.io/otel"
 )
@@ -32,19 +31,30 @@ func main() {
 		panic(err)
 	}
 
+	// Init broker client
+	var kafkaBroker broker.Broker
+	if len(configuration.KafkaBrokers) > 0 {
+		kafkaBroker, err = broker.NewKafkaBroker(broker.NewKafkaBrokerArgs{
+			BootstrapServers: configuration.KafkaBrokers,
+			Service:          configuration.ServiceName,
+			Topic:            configuration.WalletTopic,
+			Logger:           appLogger,
+		})
+		if err != nil {
+			panic(err)
+		}
+		defer kafkaBroker.Close()
+	}
+
+	// Publisher initialization
+	publisher := publisher.InitPublisher(kafkaBroker, appLogger)
+
 	// Database initialization
-	db, err := initDatabase(ctx, configuration, appLogger)
+	repos, err := database.InitDatabase(ctx, configuration, appLogger, publisher)
 	if err != nil {
 		panic(err)
 	}
-	defer db.Close()
-
-	// Broker initialization
-	publisher := kafka.NewKafkaPublisher(configuration)
-	defer publisher.Close()
-
-	// Repositories initialization
-	repos := repository.NewPostgreSQL(db, publisher)
+	defer repos.Close()
 
 	// Use cases initialization
 	usecases := uc.InitUseCases(uc.InitUseCasesArgs{
@@ -65,29 +75,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-}
-
-func initDatabase(ctx context.Context, appConfig *config.AppConfiguration, appLogger *logger.AppLogger) (*sql.DB, error) {
-	// Initialize the PostgreSQL client
-	db, err := database.NewPostgresClient(context.Background(), appConfig.DatabaseUrl)
-	if err != nil {
-		appLogger.Fatal(ctx, "failed to create the postgres client", slog.String("error", err.Error()))
-	}
-
-	// Ping the database to ensure the connection is established
-	err = db.Ping()
-	if err != nil {
-		appLogger.Fatal(ctx, "failed to ping database", slog.String("error", err.Error()))
-	}
-	appLogger.Info(ctx, "Connected to database")
-
-	// Apply database migrations
-	err = database.MigrateUp(appConfig.MigrationUrl, appConfig.DatabaseUrl)
-	if err != nil {
-		appLogger.Fatal(ctx, "failed to apply database migration", slog.String("error", err.Error()))
-	}
-
-	return db, nil
 }
 
 func initTelemetry(ctx context.Context, appConfig *config.AppConfiguration) (func() error, error) {

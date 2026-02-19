@@ -1,4 +1,4 @@
-package inmemory
+package database
 
 import (
 	"context"
@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/lopesgabriel/tellawl/services/member-service/internal/domain/events"
 	"github.com/lopesgabriel/tellawl/services/member-service/internal/domain/models"
-	"github.com/lopesgabriel/tellawl/services/member-service/internal/infra/database"
 )
 
 type inMemoryMemberRepository struct {
@@ -28,7 +27,7 @@ func (r inMemoryMemberRepository) FindByID(ctx context.Context, id string) (*mod
 
 	member, ok := r.items[id]
 	if !ok {
-		return nil, database.ErrNotFound
+		return nil, ErrNotFound
 	}
 
 	return &member, nil
@@ -45,7 +44,7 @@ func (r inMemoryMemberRepository) FindByEmail(ctx context.Context, email string)
 	}
 
 	if member.Id == "" {
-		return nil, database.ErrNotFound
+		return nil, ErrNotFound
 	}
 
 	return &member, nil
@@ -74,5 +73,9 @@ func (r *inMemoryMemberRepository) Upsert(ctx context.Context, user *models.Memb
 	}
 	user.ClearEvents()
 
+	return nil
+}
+
+func (r inMemoryMemberRepository) Close() error {
 	return nil
 }

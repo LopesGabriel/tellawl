@@ -1,4 +1,4 @@
-package inmemory
+package publisher
 
 import (
 	"context"

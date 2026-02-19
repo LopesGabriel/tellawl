@@ -5,7 +5,8 @@ import (
 
 	"github.com/lopesgabriel/tellawl/packages/logger"
 	"github.com/lopesgabriel/tellawl/services/member-service/internal/domain/repository"
-	inmemoryevt "github.com/lopesgabriel/tellawl/services/member-service/internal/infra/events/in_memory"
+	"github.com/lopesgabriel/tellawl/services/member-service/internal/infra/database"
+	"github.com/lopesgabriel/tellawl/services/member-service/internal/infra/publisher"
 	usecases "github.com/lopesgabriel/tellawl/services/member-service/internal/use_cases"
 	noopl "go.opentelemetry.io/otel/log/noop"
 	noopt "go.opentelemetry.io/otel/trace/noop"
@@ -13,8 +14,8 @@ import (
 
 func TestRefreshTokenUseCase(t *testing.T) {
 	t.Run("Successfully generates new token from refresh token", func(t *testing.T) {
-		publisher := inmemoryevt.InitInMemoryEventPublisher()
-		repo := repository.NewInMemory(publisher)
+		publisher := publisher.InitInMemoryEventPublisher()
+		memberRepo := database.InitInMemoryMemberRepository(publisher)
 		logger, err := logger.Init(t.Context(), logger.InitLoggerArgs{
 			LoggerProvider:   noopl.NewLoggerProvider(),
 			ServiceNamespace: "test",
@@ -25,7 +26,7 @@ func TestRefreshTokenUseCase(t *testing.T) {
 
 		ucs := usecases.InitUseCases(usecases.InitUseCasesArgs{
 			JwtSecret: "t3st-S3cret",
-			Repos:     repo,
+			Repos:     &repository.Repositories{Members: memberRepo},
 			Tracer:    noopt.NewTracerProvider().Tracer("test"),
 			Logger:    logger,
 		})
@@ -67,8 +68,8 @@ func TestRefreshTokenUseCase(t *testing.T) {
 	})
 
 	t.Run("should fail when sending invalid refresh token", func(t *testing.T) {
-		publisher := inmemoryevt.InitInMemoryEventPublisher()
-		repo := repository.NewInMemory(publisher)
+		publisher := publisher.InitInMemoryEventPublisher()
+		memberRepo := database.InitInMemoryMemberRepository(publisher)
 		logger, err := logger.Init(t.Context(), logger.InitLoggerArgs{
 			LoggerProvider:   noopl.NewLoggerProvider(),
 			ServiceNamespace: "test",
@@ -79,7 +80,7 @@ func TestRefreshTokenUseCase(t *testing.T) {
 
 		ucs := usecases.InitUseCases(usecases.InitUseCasesArgs{
 			JwtSecret: "t3st-S3cret",
-			Repos:     repo,
+			Repos:     &repository.Repositories{Members: memberRepo},
 			Tracer:    noopt.NewTracerProvider().Tracer("test"),
 			Logger:    logger,
 		})

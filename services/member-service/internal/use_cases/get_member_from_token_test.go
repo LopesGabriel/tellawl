@@ -7,7 +7,8 @@ import (
 
 	"github.com/lopesgabriel/tellawl/packages/logger"
 	"github.com/lopesgabriel/tellawl/services/member-service/internal/domain/repository"
-	inmemoryevt "github.com/lopesgabriel/tellawl/services/member-service/internal/infra/events/in_memory"
+	"github.com/lopesgabriel/tellawl/services/member-service/internal/infra/database"
+	"github.com/lopesgabriel/tellawl/services/member-service/internal/infra/publisher"
 	usecases "github.com/lopesgabriel/tellawl/services/member-service/internal/use_cases"
 	noopl "go.opentelemetry.io/otel/log/noop"
 	noopt "go.opentelemetry.io/otel/trace/noop"
@@ -15,8 +16,8 @@ import (
 
 func TestGetMemberFromTokenUseCase(t *testing.T) {
 	t.Run("successfully retrieves member from token", func(t *testing.T) {
-		publisher := inmemoryevt.InitInMemoryEventPublisher()
-		repo := repository.NewInMemory(publisher)
+		publisher := publisher.InitInMemoryEventPublisher()
+		memberRepo := database.InitInMemoryMemberRepository(publisher)
 		logger, err := logger.Init(t.Context(), logger.InitLoggerArgs{
 			LoggerProvider:   noopl.NewLoggerProvider(),
 			ServiceNamespace: "test",
@@ -27,7 +28,7 @@ func TestGetMemberFromTokenUseCase(t *testing.T) {
 
 		ucs := usecases.InitUseCases(usecases.InitUseCasesArgs{
 			JwtSecret: "t3st-S3cret",
-			Repos:     repo,
+			Repos:     &repository.Repositories{Members: memberRepo},
 			Tracer:    noopt.NewTracerProvider().Tracer("test"),
 			Logger:    logger,
 		})
@@ -71,8 +72,8 @@ func TestGetMemberFromTokenUseCase(t *testing.T) {
 	})
 
 	t.Run("should throw invalid credentials error", func(t *testing.T) {
-		publisher := inmemoryevt.InitInMemoryEventPublisher()
-		repo := repository.NewInMemory(publisher)
+		publisher := publisher.InitInMemoryEventPublisher()
+		memberRepo := database.InitInMemoryMemberRepository(publisher)
 		logger, err := logger.Init(t.Context(), logger.InitLoggerArgs{
 			LoggerProvider:   noopl.NewLoggerProvider(),
 			ServiceNamespace: "test",
@@ -83,7 +84,7 @@ func TestGetMemberFromTokenUseCase(t *testing.T) {
 
 		ucs := usecases.InitUseCases(usecases.InitUseCasesArgs{
 			JwtSecret: "t3st-S3cret",
-			Repos:     repo,
+			Repos:     &repository.Repositories{Members: memberRepo},
 			Tracer:    noopt.NewTracerProvider().Tracer("test"),
 			Logger:    logger,
 		})
@@ -101,9 +102,9 @@ func TestGetMemberFromTokenUseCase(t *testing.T) {
 	})
 
 	t.Run("should throw member not found error", func(t *testing.T) {
-		publisher := inmemoryevt.InitInMemoryEventPublisher()
-		repo := repository.NewInMemory(publisher)
-		repo2 := repository.NewInMemory(publisher)
+		publisher := publisher.InitInMemoryEventPublisher()
+		memberRepo := database.InitInMemoryMemberRepository(publisher)
+		memberRepo2 := database.InitInMemoryMemberRepository(publisher)
 		logger, err := logger.Init(t.Context(), logger.InitLoggerArgs{
 			LoggerProvider:   noopl.NewLoggerProvider(),
 			ServiceNamespace: "test",
@@ -114,7 +115,7 @@ func TestGetMemberFromTokenUseCase(t *testing.T) {
 
 		ucs := usecases.InitUseCases(usecases.InitUseCasesArgs{
 			JwtSecret: "t3st-S3cret",
-			Repos:     repo,
+			Repos:     &repository.Repositories{Members: memberRepo},
 			Tracer:    noopt.NewTracerProvider().Tracer("test"),
 			Logger:    logger,
 		})
@@ -139,7 +140,7 @@ func TestGetMemberFromTokenUseCase(t *testing.T) {
 
 		ucs = usecases.InitUseCases(usecases.InitUseCasesArgs{
 			JwtSecret: "t3st-S3cret",
-			Repos:     repo2,
+			Repos:     &repository.Repositories{Members: memberRepo2},
 			Tracer:    noopt.NewTracerProvider().Tracer("test"),
 			Logger:    logger,
 		})

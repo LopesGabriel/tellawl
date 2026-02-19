@@ -43,7 +43,7 @@ func NewPostgresClient(ctx context.Context, dbConnectionUrl string) (*sql.DB, er
 	return db, nil
 }
 
-func MigrateUp(migrationUrl, dbConnectionUrl string) error {
+func migrateUp(migrationUrl, dbConnectionUrl string) error {
 	m, err := migrate.New(migrationUrl, dbConnectionUrl)
 	if err != nil {
 		return err

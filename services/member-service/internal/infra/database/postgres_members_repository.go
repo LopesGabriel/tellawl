@@ -1,4 +1,4 @@
-package postgresql
+package database
 
 import (
 	"context"
@@ -10,7 +10,6 @@ import (
 	"github.com/lopesgabriel/tellawl/packages/tracing"
 	"github.com/lopesgabriel/tellawl/services/member-service/internal/domain/events"
 	"github.com/lopesgabriel/tellawl/services/member-service/internal/domain/models"
-	"github.com/lopesgabriel/tellawl/services/member-service/internal/infra/database"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
@@ -23,16 +22,11 @@ type postgreSQLMembersRepository struct {
 	logger    *logger.AppLogger
 }
 
-func NewPostgreSQLMembersRepository(db *sql.DB, publisher events.EventPublisher) *postgreSQLMembersRepository {
-	appLogger, err := logger.GetLogger()
-	if err != nil {
-		panic(err)
-	}
-
+func NewPostgreSQLMembersRepository(db *sql.DB, publisher events.EventPublisher, appLogger *logger.AppLogger) *postgreSQLMembersRepository {
 	return &postgreSQLMembersRepository{
 		db:        db,
 		publisher: publisher,
-		tracer:    tracing.GetTracer("github.com/lopesgabriel/tellawl/services/member-service/internal/infra/database/postgresql/postgreSQLMembersRepository"),
+		tracer:    tracing.GetTracer("github.com/lopesgabriel/tellawl/services/member-service/internal/infra/database/postgreSQLMembersRepository"),
 		logger:    appLogger,
 	}
 }
@@ -51,7 +45,7 @@ func (r *postgreSQLMembersRepository) FindByID(ctx context.Context, id string) (
 	err := row.Scan(&member.Id, &member.FirstName, &member.LastName, &member.Email, &member.HashedPassword, &member.CreatedAt, &member.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, database.ErrNotFound // Member not found
+			return nil, ErrNotFound // Member not found
 		}
 
 		span.SetStatus(codes.Error, "failed to get member by id")
@@ -76,7 +70,7 @@ func (r *postgreSQLMembersRepository) FindByEmail(ctx context.Context, email str
 	err := row.Scan(&member.Id, &member.FirstName, &member.LastName, &member.Email, &member.HashedPassword, &member.CreatedAt, &member.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, database.ErrNotFound // Member not found
+			return nil, ErrNotFound // Member not found
 		}
 
 		span.SetStatus(codes.Error, "failed to get member by email")
@@ -124,4 +118,8 @@ func (r *postgreSQLMembersRepository) Upsert(ctx context.Context, member *models
 	member.ClearEvents()
 
 	return nil
+}
+
+func (r *postgreSQLMembersRepository) Close() error {
+	return r.db.Close()
 }

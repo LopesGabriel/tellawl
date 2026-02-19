@@ -1,4 +1,4 @@
-package kafka
+package publisher
 
 import (
 	"context"
@@ -10,7 +10,6 @@ import (
 	"github.com/lopesgabriel/tellawl/packages/broker"
 	"github.com/lopesgabriel/tellawl/packages/logger"
 	"github.com/lopesgabriel/tellawl/packages/tracing"
-	"github.com/lopesgabriel/tellawl/services/member-service/internal/config"
 	"github.com/lopesgabriel/tellawl/services/member-service/internal/domain/events"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
@@ -22,22 +21,10 @@ type kafkaEventPublisher struct {
 	logger *logger.AppLogger
 }
 
-func NewKafkaPublisher(appConfig *config.AppConfiguration) *kafkaEventPublisher {
-	appLogger, err := logger.GetLogger()
-	if err != nil {
-		panic(err)
-	}
-
-	broker, err := broker.NewKafkaBroker(broker.NewKafkaBrokerArgs{
-		BootstrapServers: appConfig.KafkaBrokers,
-		Service:          appConfig.ServiceName,
-		Topic:            appConfig.WalletTopic,
-		Logger:           appLogger,
-	})
-
+func NewKafkaPublisher(broker broker.Broker, appLogger *logger.AppLogger) *kafkaEventPublisher {
 	return &kafkaEventPublisher{
 		client: broker,
-		tracer: tracing.GetTracer("github.com/lopesgabriel/tellawl/services/member-service/internal/infra/events/kafka/kafkaEventPublisher"),
+		tracer: tracing.GetTracer("github.com/lopesgabriel/tellawl/services/member-service/internal/infra/publisher/kafkaEventPublisher"),
 		logger: appLogger,
 	}
 }
@@ -73,8 +60,4 @@ func (k *kafkaEventPublisher) Publish(ctx context.Context, events []events.Domai
 	}
 
 	return nil
-}
-
-func (k *kafkaEventPublisher) Close() error {
-	return k.client.Close()
 }
