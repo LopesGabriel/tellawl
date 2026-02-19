@@ -1,6 +1,7 @@
 package config
 
 import (
+	"log"
 	"log/slog"
 	"os"
 	"strconv"
@@ -13,6 +14,7 @@ type AppConfiguration struct {
 	JwtSecret        string
 	Version          string
 	Port             int
+	LogLevel         slog.Level
 	DatabaseUrl      string
 	MigrationUrl     string
 	OTELCollectorUrl string
@@ -31,6 +33,11 @@ func InitAppConfigurations() *AppConfiguration {
 	rawPort := os.Getenv("PORT")
 	if rawPort == "" {
 		rawPort = "8080"
+	}
+
+	logLevel := slog.LevelInfo
+	if level := os.Getenv("LOG_LEVEL"); level != "" {
+		logLevel = parseLogLevel(level)
 	}
 
 	port, err := strconv.Atoi(rawPort)
@@ -57,6 +64,7 @@ func InitAppConfigurations() *AppConfiguration {
 		JwtSecret:        os.Getenv("JWT_SECRET"),
 		Version:          os.Getenv("VERSION"),
 		Port:             port,
+		LogLevel:         logLevel,
 		DatabaseUrl:      os.Getenv("POSTGRESQL_URL"),
 		MigrationUrl:     os.Getenv("MIGRATIONS_URL"),
 		OTELCollectorUrl: os.Getenv("OTEL_COLLECTOR_URL"),
@@ -64,5 +72,21 @@ func InitAppConfigurations() *AppConfiguration {
 		ServiceNamespace: serviceNamespace,
 		WalletTopic:      os.Getenv("WALLET_TOPIC"),
 		KafkaBrokers:     brokers,
+	}
+}
+
+func parseLogLevel(level string) slog.Level {
+	switch strings.ToUpper(level) {
+	case "DEBUG", "TRACE":
+		return slog.LevelDebug
+	case "INFO":
+		return slog.LevelInfo
+	case "WARN":
+		return slog.LevelWarn
+	case "ERROR":
+		return slog.LevelError
+	default:
+		log.Printf("Invalid LOG_LEVEL '%s', defaulting to INFO", level)
+		return slog.LevelInfo
 	}
 }

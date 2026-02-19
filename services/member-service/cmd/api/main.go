@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log/slog"
 
 	"github.com/lopesgabriel/tellawl/packages/broker"
 	"github.com/lopesgabriel/tellawl/packages/logger"
@@ -83,7 +82,7 @@ func initTelemetry(ctx context.Context, appConfig *config.AppConfiguration) (fun
 		ServiceName:      appConfig.ServiceName,
 		ServiceNamespace: appConfig.ServiceNamespace,
 		ServiceVersion:   appConfig.Version,
-		Level:            slog.LevelDebug,
+		Level:            appConfig.LogLevel,
 		LoggerProvider:   nil,
 	})
 	if err != nil {
