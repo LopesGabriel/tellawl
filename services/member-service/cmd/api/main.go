@@ -47,7 +47,7 @@ func main() {
 	}
 
 	// Publisher initialization
-	publisher := publisher.InitPublisher(kafkaBroker, appLogger)
+	publisher := publisher.InitPublisher(ctx, kafkaBroker, appLogger)
 
 	// Database initialization
 	repos, err := database.InitDatabase(ctx, configuration, appLogger, publisher)

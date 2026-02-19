@@ -48,7 +48,10 @@ func InitAppConfigurations() *AppConfiguration {
 		serviceNamespace = "tellawl"
 	}
 
-	brokers := strings.Split(os.Getenv("KAFKA_BROKERS"), ",")
+	brokers := []string{}
+	if os.Getenv("KAFKA_BROKERS") != "" {
+		brokers = strings.Split(os.Getenv("KAFKA_BROKERS"), ",")
+	}
 
 	return &AppConfiguration{
 		JwtSecret:        os.Getenv("JWT_SECRET"),
