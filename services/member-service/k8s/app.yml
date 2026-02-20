@@ -24,7 +24,7 @@ spec:
             - name: LOG_LEVEL
               value: "INFO"
             - name: OTEL_COLLECTOR_URL
-              value: "otel-lgtm.observability.svc.cluster.local:4317"
+              value: "192.168.1.21:4317"
             - name: POSTGRESQL_URL
               valueFrom:
                 secretKeyRef:

@@ -24,7 +24,7 @@ spec:
             - name: LOG_LEVEL
               value: "INFO"
             - name: OTEL_COLLECTOR_ENDPOINT
-              value: "otel-lgtm.observability.svc.cluster.local:4317"
+              value: "192.168.1.21:4317"
             - name: GOOGLE_OAUTH_CREDENTIALS_FILE
               value: "/etc/notifier/credentials/credentials.json"
             - name: GOOGLE_SERVICE_CREDENTIALS_FILE
