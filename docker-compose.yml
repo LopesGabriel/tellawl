@@ -24,6 +24,14 @@ services:
     ports:
       - 35432:5432
 
+  casa-nova-db:
+    image: postgres:16.2-alpine3.19
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: casa_nova
+    ports:
+      - 45432:5432
+
   ## Broker
   broker:
     image: apache/kafka:latest

@@ -30,10 +30,7 @@ type AppConfiguration struct {
 }
 
 func InitAppConfigurations() *AppConfiguration {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file: " + err.Error())
-	}
+	_ = godotenv.Load()
 
 	projectId := os.Getenv("GOOGLE_PROJECT_ID")
 	if projectId == "" {
@@ -52,8 +49,10 @@ func InitAppConfigurations() *AppConfiguration {
 
 	logLevel := getEnv("LOG_LEVEL", "DEBUG")
 
-	rawBrokers := getEnv("KAFKA_BROKERS", "")
-	kafkaBrokers := strings.Split(rawBrokers, ",")
+	kafkaBrokers := []string{}
+	if rawBrokers := getEnv("KAFKA_BROKERS", ""); rawBrokers != "" {
+		kafkaBrokers = strings.Split(rawBrokers, ",")
+	}
 
 	return &AppConfiguration{
 		GoogleProjectId:        projectId,

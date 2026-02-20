@@ -1,0 +1,112 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: observability
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: otel-lgtm-data
+  namespace: observability
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-lgtm
+  namespace: observability
+  labels:
+    app: otel-lgtm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: otel-lgtm
+  template:
+    metadata:
+      labels:
+        app: otel-lgtm
+    spec:
+      containers:
+        - name: otel-lgtm
+          image: grafana/otel-lgtm:latest
+          ports:
+            - name: grafana
+              containerPort: 3000
+              protocol: TCP
+            - name: otel-grpc
+              containerPort: 4317
+              protocol: TCP
+            - name: otel-http
+              containerPort: 4318
+              protocol: TCP
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 5
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            failureThreshold: 3
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: otel-lgtm-data
+
+---
+
+# ClusterIP — lets other services inside the cluster send OTEL telemetry
+# and reach the Grafana UI without going through the public internet.
+# Reference from your services:
+#   OTEL gRPC endpoint : http://otel-lgtm.observability.svc.cluster.local:4317
+#   OTEL HTTP endpoint : http://otel-lgtm.observability.svc.cluster.local:4318
+#   Grafana UI         : http://otel-lgtm.observability.svc.cluster.local:3000
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-lgtm
+  namespace: observability
+  labels:
+    app: otel-lgtm
+spec:
+  type: ClusterIP
+  selector:
+    app: otel-lgtm
+  ports:
+    - name: grafana
+      port: 3000
+      targetPort: 3000
+    - name: otel-grpc
+      port: 4317
+      targetPort: 4317
+    - name: otel-http
+      port: 4318
+      targetPort: 4318
+
+# Once the pod is ready, forward port 3000
+# kubectl port-forward svc/otel-lgtm 3000:3000 -n observability

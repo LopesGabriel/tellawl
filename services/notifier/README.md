@@ -40,6 +40,16 @@ The service is configured via environment variables. You can use a `.env` file i
 | `KAFKA_BROKERS`                  | Comma-separated list of Kafka broker addresses   | `localhost:9092`                 |
 | `KAFKA_TOPIC`                    | Kafka topic to subscribe to                      |                                  |
 
+### K8s secrets creation
+
+```sh
+kubectl create secret generic notifier-credentials \
+  --from-file=credentials.json=./services/notifier/credentials.json \
+  --from-file=service-credentials.json=./services/notifier/service-credentials.json \
+  --from-file=token.json=./services/notifier/token.json \
+  -n <namespace>
+```
+
 ## Running the Service
 
 1. **Install dependencies**

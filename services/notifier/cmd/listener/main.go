@@ -58,6 +58,12 @@ func main() {
 			Topic:            config.KafkaTopic,
 			Logger:           applogger,
 		})
+		if err != nil {
+			applogger.Fatal(ctx, "Erro ao inicializar Kafka Broker", slog.Any("error", err))
+		}
+		defer kafkaBroker.Close()
+
+		applogger.Info(ctx, "Kafka Broker inicializado com sucesso")
 	}
 
 	// Inicializa o publisher de eventos
@@ -82,16 +88,18 @@ func main() {
 	telegramClient := telegram.NewClient(config.TelegramBotToken)
 
 	// Inicia o Kafka consumer
-	kafkaListener := listener.NewKafkaListener(listener.NewKafkaListenerParams{
-		Topic:                       config.KafkaTopic,
-		Broker:                      kafkaBroker,
-		ProcessedMessagesRepository: processedMessagesRepository,
-		Tracer:                      tracing.GetTracer("github.com/lopesgabriel/tellawl/services/notifier/internal/infra/listener"),
-		AppLogger:                   applogger,
-		TelegramClient:              telegramClient,
-		TelegramRepo:                telegramRepository,
-	})
-	kafkaListener.Start()
+	if kafkaBroker != nil {
+		kafkaListener := listener.NewKafkaListener(listener.NewKafkaListenerParams{
+			Topic:                       config.KafkaTopic,
+			Broker:                      kafkaBroker,
+			ProcessedMessagesRepository: processedMessagesRepository,
+			Tracer:                      tracing.GetTracer("github.com/lopesgabriel/tellawl/services/notifier/internal/infra/listener"),
+			AppLogger:                   applogger,
+			TelegramClient:              telegramClient,
+			TelegramRepo:                telegramRepository,
+		})
+		kafkaListener.Start()
+	}
 
 	// Cliente OAuth2 para Gmail
 	b, err := os.ReadFile(config.CredentialsFile)

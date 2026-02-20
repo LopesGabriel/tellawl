@@ -36,7 +36,10 @@ func InitAppConfigurations() *AppConfiguration {
 		port = 8080
 	}
 
-	brokers := strings.Split(getEnv("KAFKA_BROKERS", ""), ",")
+	brokers := []string{}
+	if rawBrokers := getEnv("KAFKA_BROKERS", ""); rawBrokers != "" {
+		brokers = strings.Split(rawBrokers, ",")
+	}
 
 	return &AppConfiguration{
 		Version:          getEnv("VERSION", "1.0.0"),
