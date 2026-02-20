@@ -41,11 +41,14 @@ func main() {
 			Topic:            appConfig.KafkaTopic,
 			Logger:           appLogger,
 		})
+		if err != nil {
+			appLogger.Fatal(ctx, "failed to initialize Kafka broker", slog.String("error", err.Error()))
+		}
+		defer kafkaBroker.Close()
 	}
 
 	// Publisher initialization
 	publisher := publisher.InitEventPublisher(ctx, appConfig, appLogger, kafkaBroker)
-	defer publisher.Close()
 
 	// Database initialization
 	repos, err := database.InitDatabase(ctx, appConfig, publisher)

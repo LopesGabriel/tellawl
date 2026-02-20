@@ -36,11 +36,6 @@ spec:
                 secretKeyRef:
                   name: notifier-db-secret
                   key: POSTGRESQL_URL
-            - name: JWT_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: notifier-secret
-                  key: JWT_SECRET
             - name: GOOGLE_PROJECT_ID
               valueFrom:
                 secretKeyRef:
