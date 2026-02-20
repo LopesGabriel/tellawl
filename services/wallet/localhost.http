@@ -18,7 +18,7 @@ Content-Type: {{contentType}}
 Authorization: Bearer {{jwtToken}}
 
 {
-  "name": "My Personal Wallet"
+  "name": "Chá de casa nova"
 }
 
 ###
