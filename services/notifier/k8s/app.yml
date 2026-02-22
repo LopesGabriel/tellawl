@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: notifier
-          image: lopesgabriel/notifier:1.0.0
+          image: lopesgabriel/notifier:e7452be-arm64
           env:
             - name: SERVICE_VERSION
               value: "1.0.0"
