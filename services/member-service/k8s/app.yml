@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: member-service
-          image: lopesgabriel/member-service:6f0207c-arm64
+          image: lopesgabriel/member-service:a6a48dc-arm64
           env:
             - name: VERSION
               value: "1.0.2"
