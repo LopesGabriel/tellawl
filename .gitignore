@@ -4,3 +4,4 @@ service-credentials.json
 token.json
 *-secret.yml
 *-secret.yaml
+ARGOCD_SETUP.md

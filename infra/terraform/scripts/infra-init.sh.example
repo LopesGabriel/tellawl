@@ -1,0 +1,112 @@
+#!/bin/bash
+set -euo pipefail
+
+# ─── Infra Instance Init Script ───────────────────────────────
+# Installs Docker and runs PostgreSQL, Kafka, and Grafana LGTM.
+
+export DEBIAN_FRONTEND=noninteractive
+
+PRIVATE_IP=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)
+
+echo ">>> Updating system packages..."
+apt-get update -y
+apt-get upgrade -y
+
+# ─── Install Docker ────────────────────────────────────────────
+echo ">>> Installing Docker..."
+apt-get install -y ca-certificates curl gnupg
+install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+chmod a+r /etc/apt/keyrings/docker.gpg
+
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+apt-get update -y
+apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+
+systemctl enable docker
+systemctl start docker
+
+# Allow ubuntu user to run docker
+usermod -aG docker ubuntu
+
+# ─── Create Docker network ─────────────────────────────────────
+docker network create tellawl-net || true
+
+# ─── PostgreSQL databases ──────────────────────────────────────
+echo ">>> Starting PostgreSQL containers..."
+
+mkdir -p /data/postgresql
+chown -R 1000:1000 /data/postgresql
+
+docker run -d \
+  --name "postgres-db" \
+  --network tellawl-net \
+  --restart unless-stopped \
+  -e POSTGRES_PASSWORD=<YOUR_POSTGRES_PASSWORD> \
+  -e POSTGRES_DB="postgres" \
+  -p "5432:5432" \
+  -v "/data/postgresql:/var/lib/postgresql/data" \
+  postgres:16.2-alpine3.19
+
+# ─── Kafka (KRaft single node) ─────────────────────────────────
+echo ">>> Starting Kafka..."
+
+mkdir -p /data/kafka
+chown -R 1000:1000 /data/kafka
+
+docker run -d \
+  --name kafka \
+  --network tellawl-net \
+  --restart unless-stopped \
+  -e KAFKA_NODE_ID=1 \
+  -e KAFKA_PROCESS_ROLES=broker,controller \
+  -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP='INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT' \
+  -e KAFKA_LISTENERS='INTERNAL://0.0.0.0:29092,EXTERNAL://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093' \
+  -e KAFKA_ADVERTISED_LISTENERS="INTERNAL://kafka:29092,EXTERNAL://${PRIVATE_IP}:9092" \
+  -e KAFKA_INTER_BROKER_LISTENER_NAME=INTERNAL \
+  -e KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER \
+  -e KAFKA_CONTROLLER_QUORUM_VOTERS='1@kafka:9093' \
+  -e KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1 \
+  -e KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1 \
+  -e KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1 \
+  -e KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS=0 \
+  -e KAFKA_NUM_PARTITIONS=3 \
+  -p 9092:9092 \
+  -p 29092:29092 \
+  -v /data/kafka:/var/kafka/data \
+  apache/kafka:latest
+
+# ─── Grafana LGTM (Logs, Grafana, Traces, Metrics) ─────────────
+echo ">>> Starting Grafana OTEL LGTM stack..."
+
+mkdir -p /data/grafana
+chown -R 1000:1000 /data/grafana
+
+docker run -d \
+  --name otel-lgtm \
+  --network tellawl-net \
+  --restart unless-stopped \
+  -p 3000:3000 \
+  -p 4317:4317 \
+  -v /data/grafana:/var/lib/grafana \
+  grafana/otel-lgtm
+
+docker run -d \
+  --name redpanda-console \
+  --network tellawl-net \
+  --restart unless-stopped \
+  -e KAFKA_BROKERS=kafka:29092 \
+  -p 8080:8080 \
+  docker.redpanda.com/redpandadata/console:latest
+
+echo ">>> Infra instance initialization complete!"
+echo ">>> Services running:"
+echo "    - PostgreSQL:                  port 5432"
+echo "    - Kafka:                       port 9092"
+echo "    - Redpanda Console:            port 8080"
+echo "    - Grafana:                     port 3000"
+echo "    - OTLP gRPC:                   port 4317"

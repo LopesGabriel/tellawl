@@ -1,0 +1,62 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: member-service
+  namespace: argocd
+spec:
+  project: tellawl
+  source:
+    repoURL: https://github.com/lopesgabriel/tellawl.git
+    targetRevision: main
+    path: services/member-service/k8s
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: tellawl
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: notifier
+  namespace: argocd
+spec:
+  project: tellawl
+  source:
+    repoURL: https://github.com/lopesgabriel/tellawl.git
+    targetRevision: main
+    path: services/notifier/k8s
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: tellawl
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: wallet
+  namespace: argocd
+spec:
+  project: tellawl
+  source:
+    repoURL: https://github.com/lopesgabriel/tellawl.git
+    targetRevision: main
+    path: services/wallet/k8s
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: tellawl
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

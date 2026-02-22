@@ -1,0 +1,26 @@
+# Terraform
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+
+# SSH key
+tellawl-key.pem
+
+# Variables with secrets
+terraform.tfvars
+
+# Crash logs
+crash.log
+crash.*.log
+
+# Override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+
+scripts/infra-init.sh
+scripts/k8s-init.sh

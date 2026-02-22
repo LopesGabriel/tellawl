@@ -1,0 +1,55 @@
+# ─── ArgoCD: Expose via Traefik at argo.k8s.lopesgabriel.dev ───
+# Requires:
+#   1. cert-manager installed + ClusterIssuer letsencrypt-production ready
+#   2. ArgoCD server running with --insecure flag (disables internal TLS)
+
+# TLS Certificate (issued by Let's Encrypt via cert-manager)
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: argocd-tls
+  namespace: argocd
+spec:
+  secretName: argocd-tls
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+  dnsNames:
+    - argo.k8s.lopesgabriel.dev
+---
+# HTTP → HTTPS redirect
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: argocd-http
+  namespace: argocd
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`argo.k8s.lopesgabriel.dev`)
+      kind: Rule
+      middlewares:
+        - name: redirect-to-https
+          namespace: default
+      services:
+        - name: argocd-server
+          port: 80
+---
+# HTTPS IngressRoute
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: argocd-https
+  namespace: argocd
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`argo.k8s.lopesgabriel.dev`)
+      kind: Rule
+      services:
+        - name: argocd-server
+          port: 80
+  tls:
+    secretName: argocd-tls

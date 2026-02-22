@@ -1,0 +1,77 @@
+name: Packages CI
+
+on:
+  pull_request:
+    paths:
+      - "packages/**"
+  push:
+    branches: [main]
+    paths:
+      - "packages/**"
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      logger: ${{ steps.changes.outputs.logger }}
+      tracing: ${{ steps.changes.outputs.tracing }}
+      broker: ${{ steps.changes.outputs.broker }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            logger:
+              - 'packages/logger/**'
+            tracing:
+              - 'packages/tracing/**'
+            broker:
+              - 'packages/broker/**'
+
+  test-logger:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.logger == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+          cache-dependency-path: packages/logger/go.sum
+      - name: Run tests
+        working-directory: packages/logger
+        run: go test -v -race ./...
+
+  test-tracing:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.tracing == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+          cache-dependency-path: packages/tracing/go.sum
+      - name: Run tests
+        working-directory: packages/tracing
+        run: go test -v -race ./...
+
+  test-broker:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.broker == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+          cache-dependency-path: packages/broker/go.sum
+      - name: Install librdkafka dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            gcc g++ make pkg-config libssl-dev libsasl2-dev
+      - name: Run tests
+        working-directory: packages/broker
+        run: go test -v -race ./...

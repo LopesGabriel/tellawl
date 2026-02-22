@@ -1,0 +1,10 @@
+aws_region      = "us-east-1"
+aws_profile      = "YOUR_PROFILE"
+domain_name     = "lopesgabriel.dev"
+instance_type   = "t4g.medium"
+k8s_subdomain   = "k8s"
+infra_subdomain = "infra"
+root_volume_size = 30
+
+# Replace with your public IP (use https://checkip.amazonaws.com)
+my_ip = "YOUR_IP/32"

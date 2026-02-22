@@ -24,11 +24,11 @@ spec:
             - name: LOG_LEVEL
               value: "INFO"
             - name: OTEL_COLLECTOR_URL
-              value: "192.168.1.21:4317"
+              value: "infra.lopesgabriel.dev:4317"
             - name: MEMBER_SERVICE_URL
               value: "http://member-service.tellawl.svc.cluster.local:8080"
             - name: KAFKA_BROKERS
-              value: "192.168.1.21:9092"
+              value: "infra.lopesgabriel.dev:9092"
             - name: KAFKA_TOPIC
               value: "wallet"
             - name: POSTGRESQL_URL

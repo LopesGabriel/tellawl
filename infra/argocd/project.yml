@@ -1,0 +1,15 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: tellawl
+  namespace: argocd
+spec:
+  description: Tellawl mono-repo services
+  sourceRepos:
+    - "https://github.com/lopesgabriel/tellawl.git"
+  destinations:
+    - namespace: tellawl
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
