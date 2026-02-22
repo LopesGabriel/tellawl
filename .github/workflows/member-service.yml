@@ -125,7 +125,7 @@ jobs:
       - name: Update Kubernetes manifest
         run: |
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-          sed -i "s|image: ${{ env.DOCKER_IMAGE }}:.*|image: ${{ env.DOCKER_IMAGE }}:${SHORT_SHA}|g" \
+          sed -i "s|image: ${{ env.DOCKER_IMAGE }}:.*|image: ${{ env.DOCKER_IMAGE }}:${SHORT_SHA}-arm64|g" \
             services/${{ env.SERVICE_NAME }}/k8s/app.yml
 
       - name: Commit and push manifest update
@@ -135,5 +135,5 @@ jobs:
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
           git add services/${{ env.SERVICE_NAME }}/k8s/app.yml
           git diff --cached --quiet || \
-            git commit -m "chore(${{ env.SERVICE_NAME }}): update image tag to ${SHORT_SHA}" && \
+            git commit -m "chore(${{ env.SERVICE_NAME }}): update image tag to ${SHORT_SHA}-arm64" && \
             git push
