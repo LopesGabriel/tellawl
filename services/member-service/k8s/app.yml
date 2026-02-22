@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: member-service
-          image: lopesgabriel/member-service:1.0.2
+          image: lopesgabriel/member-service:69780a6
           env:
             - name: VERSION
               value: "1.0.2"
