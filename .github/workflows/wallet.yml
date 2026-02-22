@@ -10,11 +10,12 @@ on:
     paths:
       - "services/wallet/**"
       - "packages/**"
+    paths-ignore:
+      - "services/wallet/k8s/app.yml"
 
 env:
   SERVICE_NAME: wallet
   DOCKER_IMAGE: lopesgabriel/wallet
-  DOCKERFILE: services/wallet/Dockerfile
 
 jobs:
   test:
@@ -34,14 +35,12 @@ jobs:
         working-directory: services/wallet
         run: go test -v -race ./...
 
-  build-and-push:
+  build-and-push-amd64:
     needs: test
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    outputs:
-      image-tag: ${{ steps.meta.outputs.version }}
     steps:
       - uses: actions/checkout@v4
 
@@ -60,22 +59,62 @@ jobs:
         with:
           images: ${{ env.DOCKER_IMAGE }}
           tags: |
-            type=sha,prefix=
-            type=raw,value=latest
+            type=sha,prefix=,suffix=-amd64
+            type=raw,value=latest-amd64
 
-      - name: Build and push Docker image
+      - name: Build and push Docker image (amd64)
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ${{ env.DOCKERFILE }}
+          file: services/wallet/Dockerfile
+          platforms: linux/amd64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=amd64
+          cache-to: type=gha,mode=max,scope=amd64
+
+  build-and-push-arm64:
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Generate image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_IMAGE }}
+          tags: |
+            type=sha,prefix=,suffix=-arm64
+            type=raw,value=latest-arm64
+
+      - name: Build and push Docker image (arm64)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: services/wallet/Dockerfile.arm
+          platforms: linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=arm64
+          cache-to: type=gha,mode=max,scope=arm64
 
   update-manifests:
-    needs: build-and-push
+    needs: [build-and-push-amd64, build-and-push-arm64]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
@@ -88,7 +127,7 @@ jobs:
       - name: Update Kubernetes manifest
         run: |
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-          sed -i "s|image: ${{ env.DOCKER_IMAGE }}:.*|image: ${{ env.DOCKER_IMAGE }}:${SHORT_SHA}|g" \
+          sed -i "s|image: ${{ env.DOCKER_IMAGE }}:.*|image: ${{ env.DOCKER_IMAGE }}:${SHORT_SHA}-arm64|g" \
             services/${{ env.SERVICE_NAME }}/k8s/app.yml
 
       - name: Commit and push manifest update
@@ -98,5 +137,5 @@ jobs:
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
           git add services/${{ env.SERVICE_NAME }}/k8s/app.yml
           git diff --cached --quiet || \
-            git commit -m "chore(${{ env.SERVICE_NAME }}): update image tag to ${SHORT_SHA}" && \
+            git commit -m "chore(${{ env.SERVICE_NAME }}): update image tag to ${SHORT_SHA}-arm64" && \
             git push

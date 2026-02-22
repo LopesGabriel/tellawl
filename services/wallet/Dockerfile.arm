@@ -1,0 +1,63 @@
+# ============================================================
+# Build context: repo root (tellawl/)
+#
+# Build:
+#   docker build \
+#     -f services/wallet/Dockerfile \
+#     -t <registry>/wallet:latest \
+#     .
+#
+# Push:
+#   docker push <registry>/wallet:latest
+# ============================================================
+
+# ── Builder ─────────────────────────────────────────────────
+FROM --platform=linux/arm64 golang:1.25-bookworm AS builder
+
+# CGO dependencies required by confluent-kafka-go (builds librdkafka from source)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  gcc \
+  g++ \
+  make \
+  pkg-config \
+  libssl-dev \
+  libsasl2-dev \
+  && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+
+# Copy shared packages first to leverage layer caching
+COPY packages/ packages/
+
+# Copy service source
+COPY services/wallet/ services/wallet/
+
+WORKDIR /build/services/wallet
+
+RUN go mod download
+
+RUN CGO_ENABLED=1 GOOS=linux GOARCH=arm64 \
+  go build -ldflags="-s -w" -o /bin/wallet ./cmd/api/
+
+# ── Runtime ──────────────────────────────────────────────────
+FROM --platform=linux/arm64 debian:bookworm-slim AS runtime
+
+# Runtime shared libraries needed by confluent-kafka-go and TLS
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  ca-certificates \
+  libssl3 \
+  libsasl2-2 \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN useradd -r -u 1001 -g root appuser
+
+WORKDIR /app
+
+COPY --from=builder /bin/wallet .
+COPY --from=builder /build/services/wallet/db ./db
+
+USER appuser
+
+EXPOSE 8080
+
+ENTRYPOINT ["./wallet"]
