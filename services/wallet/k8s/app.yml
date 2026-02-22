@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: wallet
-          image: lopesgabriel/wallet:1.0.0
+          image: lopesgabriel/wallet:7afa52b-arm64
           env:
             - name: VERSION
               value: "1.0.0"
