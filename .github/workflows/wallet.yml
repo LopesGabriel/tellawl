@@ -10,8 +10,6 @@ on:
     paths:
       - "services/wallet/**"
       - "packages/**"
-    paths-ignore:
-      - "services/wallet/k8s/app.yml"
 
 env:
   SERVICE_NAME: wallet

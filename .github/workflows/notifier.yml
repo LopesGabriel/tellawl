@@ -10,8 +10,6 @@ on:
     paths:
       - "services/notifier/**"
       - "packages/**"
-    paths-ignore:
-      - "services/notifier/k8s/app.yml"
 
 env:
   SERVICE_NAME: notifier
