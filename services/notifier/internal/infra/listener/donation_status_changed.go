@@ -24,12 +24,13 @@ const (
 
 // DonationStatusChangedEvent is emitted when a donation's status transitions.
 type DonationStatusChangedEvent struct {
-	DonationID    string         `json:"donation_id"`
-	DesiredItemID string         `json:"desired_item_id"`
-	DonorName     string         `json:"donor_name"`
-	OldStatus     DonationStatus `json:"old_status"`
-	NewStatus     DonationStatus `json:"new_status"`
-	Timestamp     time.Time      `json:"timestamp"`
+	DonationID      string         `json:"donation_id"`
+	DesiredItemID   string         `json:"desired_item_id"`
+	DesiredItemName string         `json:"desired_item_name"`
+	DonorName       string         `json:"donor_name"`
+	OldStatus       DonationStatus `json:"old_status"`
+	NewStatus       DonationStatus `json:"new_status"`
+	Timestamp       time.Time      `json:"timestamp"`
 }
 
 func (e DonationStatusChangedEvent) AggregateID() string {
@@ -53,7 +54,27 @@ func (l *kafkaListener) handleDonationStatusChanged(ctx context.Context, message
 		return err
 	}
 
-	msg := fmt.Sprintf("Doação '%s' de '%s' mudou de status de '%s' para '%s'.", event.DonationID, event.DonorName, event.OldStatus, event.NewStatus)
+	statusAntigo := "desconecido"
+	switch event.OldStatus {
+	case DonationStatusPaid:
+		statusAntigo = "pago"
+	case DonationStatusPending:
+		statusAntigo = "pendente"
+	case DonationStatusCanceled:
+		statusAntigo = "cancelado"
+	}
+
+	statusNovo := "desconecido"
+	switch event.NewStatus {
+	case DonationStatusPaid:
+		statusNovo = "pago"
+	case DonationStatusPending:
+		statusNovo = "pendente"
+	case DonationStatusCanceled:
+		statusNovo = "cancelado"
+	}
+
+	msg := fmt.Sprintf("Doaçãode '%s' para o item '%s' mudou de status de '%s' para '%s'.", event.DonorName, event.DesiredItemName, statusAntigo, statusNovo)
 	err = l.broadcastTelegramNotification(ctx, msg)
 	if err != nil {
 		span.SetStatus(codes.Error, "Failed to broadcast Telegram notification")

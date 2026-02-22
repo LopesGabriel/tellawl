@@ -15,12 +15,13 @@ const NewDonationCommittedEventType = "dev.lopesgabriel.casanova.donation.commit
 
 // NewDonationCommittedEvent is emitted when a user commits to donating a desired item.
 type NewDonationCommittedEvent struct {
-	DonationID    string    `json:"donation_id"`
-	DesiredItemID string    `json:"desired_item_id"`
-	DonorID       string    `json:"donor_id"`
-	DonorName     string    `json:"donor_name"`
-	Amount        float64   `json:"amount"`
-	Timestamp     time.Time `json:"timestamp"`
+	DonationID      string    `json:"donation_id"`
+	DesiredItemID   string    `json:"desired_item_id"`
+	DesiredItemName string    `json:"desired_item_name"`
+	DonorID         string    `json:"donor_id"`
+	DonorName       string    `json:"donor_name"`
+	Amount          float64   `json:"amount"`
+	Timestamp       time.Time `json:"timestamp"`
 }
 
 func (e NewDonationCommittedEvent) AggregateID() string {
@@ -44,7 +45,7 @@ func (l *kafkaListener) handleNewDonationCommitted(ctx context.Context, message 
 		return err
 	}
 
-	msg := fmt.Sprintf("O doador '%s' comprometeu-se a doar R$ %.2f para o item '%s'.", event.DonorName, event.Amount, event.DesiredItemID)
+	msg := fmt.Sprintf("O doador '%s' comprometeu-se a doar R$ %.2f para o item '%s'.", event.DonorName, event.Amount, event.DesiredItemName)
 	err = l.broadcastTelegramNotification(ctx, msg)
 	if err != nil {
 		span.SetStatus(codes.Error, "Failed to broadcast Telegram notification")

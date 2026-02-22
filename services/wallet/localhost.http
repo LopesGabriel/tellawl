@@ -1,6 +1,4 @@
-@hostname = localhost
-@port = 8083
-@host = {{hostname}}:{{port}}
+@host = https://wallet.k8s.lopesgabriel.dev
 @contentType = application/json
 @jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzExMTg1NDQsImlhdCI6MTc3MTAzMjE0NCwic3ViIjoiYjhiYThlNDQtOTc0NC00YmJjLTgyNTAtYWQzYmY4Njc4ZjViIn0.lMYkUKXBzLwK-gTmI_WRMEBDT79kKS548__vidGGTkw
 @walletId = 9ea5fa96-8989-48fb-867b-c3a8891a9b28
@@ -8,12 +6,12 @@
 ###
 
 ### Health Check
-GET http://{{host}}/health
+GET {{host}}/health
 
 ###
 
 ### Create Wallet (requires authentication)
-POST http://{{host}}/wallets
+POST {{host}}/wallets
 Content-Type: {{contentType}}
 Authorization: Bearer {{jwtToken}}
 
@@ -24,14 +22,14 @@ Authorization: Bearer {{jwtToken}}
 ###
 
 ### List Wallets (requires authentication)
-GET http://{{host}}/wallets
+GET {{host}}/wallets
 Content-Type: {{contentType}}
 Authorization: Bearer {{jwtToken}}
 
 ###
 
 ### Share Wallet (requires authentication)
-POST http://{{host}}/wallets/{{walletId}}/share
+POST {{host}}/wallets/{{walletId}}/share
 Content-Type: {{contentType}}
 Authorization: Bearer {{jwtToken}}
 
@@ -42,7 +40,7 @@ Authorization: Bearer {{jwtToken}}
 ###
 
 ### Register Transaction (requires authentication)
-POST http://{{host}}/wallets/{{walletId}}/transactions
+POST {{host}}/wallets/{{walletId}}/transactions
 Content-Type: {{contentType}}
 Authorization: Bearer {{jwtToken}}
 

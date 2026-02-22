@@ -1,0 +1,16 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: casa-nova
+  namespace: argocd
+spec:
+  description: Casa Nova application services
+  sourceRepos:
+    - "https://github.com/LopesGabriel/casa-nova.git"
+    - "https://github.com/LopesGabriel/adk-go-experiments.git"
+  destinations:
+    - namespace: casa-nova
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace

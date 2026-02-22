@@ -60,3 +60,45 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: casa-nova-core
+  namespace: argocd
+spec:
+  project: casa-nova
+  source:
+    repoURL: https://github.com/LopesGabriel/casa-nova.git
+    targetRevision: main
+    path: backend/k8s
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: casa-nova
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: casa-nova-agent
+  namespace: argocd
+spec:
+  project: casa-nova
+  source:
+    repoURL: https://github.com/LopesGabriel/adk-go-experiments.git
+    targetRevision: main
+    path: k8s
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: casa-nova
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
