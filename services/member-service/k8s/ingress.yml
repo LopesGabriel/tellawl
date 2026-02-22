@@ -1,0 +1,71 @@
+# ─── member-service: Expose via Traefik at member.k8s.lopesgabriel.dev ───
+# Requires:
+#   1. cert-manager installed + ClusterIssuer letsencrypt-production ready
+#   2. Traefik running with web (80) and websecure (443) entrypoints
+# Only /public/* paths are exposed externally; the /public prefix is stripped
+# before forwarding to the service (e.g. /public/members → /members).
+
+# TLS Certificate (issued by Let's Encrypt via cert-manager)
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: member-service-tls
+  namespace: tellawl
+spec:
+  secretName: member-service-tls
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+  dnsNames:
+    - member.k8s.lopesgabriel.dev
+---
+# Middleware: strip /public prefix before forwarding to the service
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: member-service-strip-public
+  namespace: tellawl
+spec:
+  stripPrefix:
+    prefixes:
+      - /public
+---
+# HTTP → HTTPS redirect (only /public/* paths)
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: member-service-http
+  namespace: tellawl
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`member.k8s.lopesgabriel.dev`) && PathPrefix(`/public`)
+      kind: Rule
+      middlewares:
+        - name: redirect-to-https
+          namespace: default
+      services:
+        - name: member-service
+          port: 8080
+---
+# HTTPS IngressRoute (only /public/* paths, prefix stripped before forwarding)
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: member-service-https
+  namespace: tellawl
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`member.k8s.lopesgabriel.dev`) && PathPrefix(`/public`)
+      kind: Rule
+      middlewares:
+        - name: member-service-strip-public
+          namespace: tellawl
+      services:
+        - name: member-service
+          port: 8080
+  tls:
+    secretName: member-service-tls

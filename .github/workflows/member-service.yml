@@ -9,7 +9,11 @@ on:
     branches: [main]
     paths:
       - "packages/**"
-      - "services/member-service/**"
+      - "services/member-service/cmd/**"
+      - "services/member-service/db/**"
+      - "services/member-service/internal/**"
+      - "services/member-service/Dockerfile*"
+      - "services/member-service/go.*"
 
 env:
   SERVICE_NAME: member-service

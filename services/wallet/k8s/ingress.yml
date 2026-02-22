@@ -1,0 +1,55 @@
+# ─── wallet: Expose via Traefik at wallet.k8s.lopesgabriel.dev ───
+# Requires:
+#   1. cert-manager installed + ClusterIssuer letsencrypt-production ready
+#   2. Traefik running with web (80) and websecure (443) entrypoints
+
+# TLS Certificate (issued by Let's Encrypt via cert-manager)
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wallet-tls
+  namespace: tellawl
+spec:
+  secretName: wallet-tls
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+  dnsNames:
+    - wallet.k8s.lopesgabriel.dev
+---
+# HTTP → HTTPS redirect
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: wallet-http
+  namespace: tellawl
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`wallet.k8s.lopesgabriel.dev`)
+      kind: Rule
+      middlewares:
+        - name: redirect-to-https
+          namespace: default
+      services:
+        - name: wallet
+          port: 8080
+---
+# HTTPS IngressRoute
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: wallet-https
+  namespace: tellawl
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`wallet.k8s.lopesgabriel.dev`)
+      kind: Rule
+      services:
+        - name: wallet
+          port: 8080
+  tls:
+    secretName: wallet-tls

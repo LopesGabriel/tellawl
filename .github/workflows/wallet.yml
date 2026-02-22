@@ -8,8 +8,12 @@ on:
   push:
     branches: [main]
     paths:
-      - "services/wallet/**"
       - "packages/**"
+      - "services/wallet/cmd/**"
+      - "services/wallet/db/**"
+      - "services/wallet/internal/**"
+      - "services/wallet/Dockerfile*"
+      - "services/wallet/go.*"
 
 env:
   SERVICE_NAME: wallet

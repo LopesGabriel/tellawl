@@ -8,8 +8,12 @@ on:
   push:
     branches: [main]
     paths:
-      - "services/notifier/**"
       - "packages/**"
+      - "services/notifier/cmd/**"
+      - "services/notifier/db/**"
+      - "services/notifier/internal/**"
+      - "services/notifier/Dockerfile*"
+      - "services/notifier/go.*"
 
 env:
   SERVICE_NAME: notifier
