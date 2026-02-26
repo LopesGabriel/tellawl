@@ -25,9 +25,9 @@ import (
 	"github.com/lopesgabriel/tellawl/services/notifier/internal/config"
 	"github.com/lopesgabriel/tellawl/services/notifier/internal/domain/inbox"
 	"github.com/lopesgabriel/tellawl/services/notifier/internal/infra/database"
+	"github.com/lopesgabriel/tellawl/services/notifier/internal/infra/email"
 	"github.com/lopesgabriel/tellawl/services/notifier/internal/infra/listener"
 	"github.com/lopesgabriel/tellawl/services/notifier/internal/infra/publisher"
-	"github.com/lopesgabriel/tellawl/services/notifier/internal/infra/telegram"
 )
 
 func main() {
@@ -79,13 +79,20 @@ func main() {
 		eventPublisher,
 		dbTracer,
 	)
-	telegramRepository := database.NewPostgreSQLTelegramNotificationTargetRepository(
+	emailRepository := database.NewPostgreSQLEmailNotificationTargetRepository(
 		db,
 		dbTracer,
 	)
 
-	// Telegram Bot API Client
-	telegramClient := telegram.NewClient(config.TelegramBotToken)
+	// Email (SMTP) Client
+	emailClient := email.NewClient(email.NewClientParams{
+		SMTPHost: config.SMTPHost,
+		SMTPPort: config.SMTPPort,
+		From:     config.SMTPFrom,
+		Password: config.SMTPPassword,
+		Logger:   applogger,
+		Tracer:   tracing.GetTracer("github.com/lopesgabriel/tellawl/services/notifier/internal/infra/email"),
+	})
 
 	// Inicia o Kafka consumer
 	if kafkaBroker != nil {
@@ -95,8 +102,8 @@ func main() {
 			ProcessedMessagesRepository: processedMessagesRepository,
 			Tracer:                      tracing.GetTracer("github.com/lopesgabriel/tellawl/services/notifier/internal/infra/listener"),
 			AppLogger:                   applogger,
-			TelegramClient:              telegramClient,
-			TelegramRepo:                telegramRepository,
+			EmailClient:                 emailClient,
+			EmailRepo:                   emailRepository,
 		})
 		kafkaListener.Start()
 	}

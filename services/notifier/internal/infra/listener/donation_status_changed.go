@@ -54,7 +54,7 @@ func (l *kafkaListener) handleDonationStatusChanged(ctx context.Context, message
 		return err
 	}
 
-	statusAntigo := "desconecido"
+	statusAntigo := "desconhecido"
 	switch event.OldStatus {
 	case DonationStatusPaid:
 		statusAntigo = "pago"
@@ -64,7 +64,7 @@ func (l *kafkaListener) handleDonationStatusChanged(ctx context.Context, message
 		statusAntigo = "cancelado"
 	}
 
-	statusNovo := "desconecido"
+	statusNovo := "desconhecido"
 	switch event.NewStatus {
 	case DonationStatusPaid:
 		statusNovo = "pago"
@@ -74,10 +74,11 @@ func (l *kafkaListener) handleDonationStatusChanged(ctx context.Context, message
 		statusNovo = "cancelado"
 	}
 
-	msg := fmt.Sprintf("Doaçãode '%s' para o item '%s' mudou de status de '%s' para '%s'.", event.DonorName, event.DesiredItemName, statusAntigo, statusNovo)
-	err = l.broadcastTelegramNotification(ctx, msg)
+	subject := fmt.Sprintf("Status de doação alterado: %s → %s", statusAntigo, statusNovo)
+	body := fmt.Sprintf("Doação de '%s' para o item '%s' mudou de status de '%s' para '%s'.", event.DonorName, event.DesiredItemName, statusAntigo, statusNovo)
+	err = l.broadcastEmailNotification(ctx, subject, body)
 	if err != nil {
-		span.SetStatus(codes.Error, "Failed to broadcast Telegram notification")
+		span.SetStatus(codes.Error, "Failed to broadcast email notification")
 		span.RecordError(err)
 		return err
 	}

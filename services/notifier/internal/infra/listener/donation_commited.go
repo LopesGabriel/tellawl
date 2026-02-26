@@ -45,10 +45,11 @@ func (l *kafkaListener) handleNewDonationCommitted(ctx context.Context, message 
 		return err
 	}
 
-	msg := fmt.Sprintf("O doador '%s' comprometeu-se a doar R$ %.2f para o item '%s'.", event.DonorName, event.Amount, event.DesiredItemName)
-	err = l.broadcastTelegramNotification(ctx, msg)
+	subject := fmt.Sprintf("Nova doação: %s comprometeu-se com '%s'", event.DonorName, event.DesiredItemName)
+	body := fmt.Sprintf("O doador '%s' comprometeu-se a doar R$ %.2f para o item '%s'.", event.DonorName, event.Amount, event.DesiredItemName)
+	err = l.broadcastEmailNotification(ctx, subject, body)
 	if err != nil {
-		span.SetStatus(codes.Error, "Failed to broadcast Telegram notification")
+		span.SetStatus(codes.Error, "Failed to broadcast email notification")
 		span.RecordError(err)
 		return err
 	}

@@ -50,6 +50,26 @@ spec:
                 secretKeyRef:
                   name: notifier-secret
                   key: PUBSUB_TOPIC
+            - name: SMTP_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: notifier-secret
+                  key: SMTP_HOST
+            - name: SMTP_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: notifier-secret
+                  key: SMTP_PORT
+            - name: SMTP_FROM
+              valueFrom:
+                secretKeyRef:
+                  name: notifier-secret
+                  key: SMTP_FROM
+            - name: SMTP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: notifier-secret
+                  key: SMTP_PASSWORD
           ports:
             - name: http
               containerPort: 8080

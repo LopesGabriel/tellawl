@@ -8,7 +8,7 @@ import (
 	"github.com/lopesgabriel/tellawl/packages/broker"
 	"github.com/lopesgabriel/tellawl/packages/logger"
 	"github.com/lopesgabriel/tellawl/services/notifier/internal/domain/repositories"
-	"github.com/lopesgabriel/tellawl/services/notifier/internal/infra/telegram"
+	"github.com/lopesgabriel/tellawl/services/notifier/internal/infra/email"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -19,11 +19,11 @@ import (
 type kafkaListener struct {
 	broker                      broker.Broker
 	processedMessagesRepository repositories.ProcessedMessagesRepository
-	telegramRepo                repositories.TelegramNotificationTargetRepository
+	emailRepo                   repositories.EmailNotificationTargetRepository
 	logger                      *logger.AppLogger
 	tracer                      trace.Tracer
 	topic                       string
-	telegramClient              *telegram.Client
+	emailClient                 *email.Client
 }
 
 type NewKafkaListenerParams struct {
@@ -32,8 +32,8 @@ type NewKafkaListenerParams struct {
 	ProcessedMessagesRepository repositories.ProcessedMessagesRepository
 	Tracer                      trace.Tracer
 	AppLogger                   *logger.AppLogger
-	TelegramClient              *telegram.Client
-	TelegramRepo                repositories.TelegramNotificationTargetRepository
+	EmailClient                 *email.Client
+	EmailRepo                   repositories.EmailNotificationTargetRepository
 }
 
 func NewKafkaListener(params NewKafkaListenerParams) *kafkaListener {
@@ -42,9 +42,9 @@ func NewKafkaListener(params NewKafkaListenerParams) *kafkaListener {
 		processedMessagesRepository: params.ProcessedMessagesRepository,
 		logger:                      params.AppLogger,
 		topic:                       params.Topic,
-		telegramClient:              params.TelegramClient,
+		emailClient:                 params.EmailClient,
 		tracer:                      params.Tracer,
-		telegramRepo:                params.TelegramRepo,
+		emailRepo:                   params.EmailRepo,
 	}
 }
 
@@ -111,31 +111,34 @@ func getHeaderValue(headers []kafka.Header, key string) string {
 	return ""
 }
 
-func (l *kafkaListener) broadcastTelegramNotification(ctx context.Context, message string) error {
-	ctx, span := l.tracer.Start(ctx, "broadcastTelegramNotification")
+func (l *kafkaListener) broadcastEmailNotification(ctx context.Context, subject, body string) error {
+	ctx, span := l.tracer.Start(ctx, "broadcastEmailNotification")
 	defer span.End()
 
-	targets, err := l.telegramRepo.List(ctx)
+	targets, err := l.emailRepo.List(ctx)
 	if err != nil {
-		l.logger.Error(ctx, "Failed to list Telegram notification targets", slog.Any("error", err))
-		span.SetStatus(codes.Error, "Failed to list Telegram notification targets")
+		l.logger.Error(ctx, "Failed to list email notification targets", slog.Any("error", err))
+		span.SetStatus(codes.Error, "Failed to list email notification targets")
 		span.RecordError(err)
 		return err
 	}
 
+	recipients := make([]string, 0, len(targets))
 	for _, target := range targets {
-		telegramMsg, err := l.telegramClient.SendMessage(ctx, telegram.SendMessageRequest{
-			ChatID: target.ChatID,
-			Text:   message,
-		})
-		if err != nil {
-			l.logger.Error(ctx, "Failed to send Telegram message", slog.Any("error", err), slog.Int("chat_id", target.ChatID))
-			span.SetStatus(codes.Error, "Failed to send Telegram message")
-			span.RecordError(err)
-			continue
-		}
+		recipients = append(recipients, target.Email)
+	}
 
-		l.logger.Info(ctx, "Sent Telegram notification", slog.Int("chat_id", target.ChatID), slog.Int("message_id", telegramMsg.MessageID))
+	if len(recipients) == 0 {
+		l.logger.Warn(ctx, "No email notification targets configured, skipping notification")
+		span.SetStatus(codes.Ok, "no recipients")
+		return nil
+	}
+
+	err = l.emailClient.SendEmail(ctx, recipients, subject, body)
+	if err != nil {
+		span.SetStatus(codes.Error, "Failed to send email notification")
+		span.RecordError(err)
+		return err
 	}
 
 	span.SetStatus(codes.Ok, "success")

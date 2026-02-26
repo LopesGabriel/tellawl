@@ -26,7 +26,10 @@ type AppConfiguration struct {
 	KafkaBrokers []string
 	KafkaTopic   string
 
-	TelegramBotToken string
+	SMTPHost     string
+	SMTPPort     string
+	SMTPFrom     string
+	SMTPPassword string
 }
 
 func InitAppConfigurations() *AppConfiguration {
@@ -69,7 +72,10 @@ func InitAppConfigurations() *AppConfiguration {
 		LoggerLevel:            parseLogLevel(logLevel),
 		KafkaBrokers:           kafkaBrokers,
 		KafkaTopic:             getEnv("KAFKA_TOPIC", ""),
-		TelegramBotToken:       getEnv("TELEGRAM_BOT_TOKEN", ""),
+		SMTPHost:               getEnv("SMTP_HOST", "smtp.gmail.com"),
+		SMTPPort:               getEnv("SMTP_PORT", "587"),
+		SMTPFrom:               getEnv("SMTP_FROM", ""),
+		SMTPPassword:           getEnv("SMTP_PASSWORD", ""),
 	}
 }
 
